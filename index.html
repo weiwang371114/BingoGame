@@ -3,10 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hello World</title>
+  <title>Bingo Game</title>
+  <style>
+    #bingo-board {
+      display: grid;
+      grid-template-columns: repeat(5, 60px);
+      gap: 5px;
+    }
+    .grid-cell {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #000;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .selected {
+      background-color: #90EE90;
+      pointer-events: none;
+    }
+  </style>
 </head>
 <body>
-  <h1>Hello, World!</h1>
-  <p>Welcome to my first GitHub Pages website.</p>
+
+<h1>Bingo Game</h1>
+<div id="bingo-board"></div>
+
+<script src="bingo.js" type="module"></script>
+
 </body>
 </html>
