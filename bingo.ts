@@ -85,8 +85,10 @@ class BingoGame {
 
   private resetGame() {
     // Clear selected cells and reset the board
-    this.selectedCells.clear();
+    this.selectedCells.clear(); // Clear the internal set
     const cells = this.board.querySelectorAll(".grid-cell");
+
+    // Remove the "selected" class from each grid cell
     cells.forEach((cell) => cell.classList.remove("selected"));
   }
 }

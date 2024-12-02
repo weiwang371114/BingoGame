@@ -1,8 +1,11 @@
 var BingoGame = /** @class */ (function () {
     function BingoGame() {
+        var _this = this;
         this.maxSelections = 16;
         this.board = document.getElementById("bingo-board");
+        this.resetButton = document.getElementById("reset-button");
         this.selectedCells = new Set();
+        this.resetButton.addEventListener("click", function () { return _this.resetGame(); });
         this.initBoard();
     }
     BingoGame.prototype.initBoard = function () {
@@ -20,12 +23,17 @@ var BingoGame = /** @class */ (function () {
         }
     };
     BingoGame.prototype.selectCell = function (index) {
+        var _this = this;
         if (this.selectedCells.has(index))
             return;
+        // Mark the current cell
         this.markCell(index);
+        // Select a random unselected cell after the current one
         this.selectRandomCell();
+        // Check if we have reached the maximum number of selections
         if (this.selectedCells.size >= this.maxSelections) {
-            this.endGame();
+            // Make sure the last pick and the random pick are visible before ending
+            setTimeout(function () { return _this.endGame(); }, 300);
         }
     };
     BingoGame.prototype.selectRandomCell = function () {
@@ -70,6 +78,12 @@ var BingoGame = /** @class */ (function () {
         if (rows.every(function (_, i) { return rows[i][4 - i]; }))
             completedLines++; // top-right to bottom-left
         return completedLines;
+    };
+    BingoGame.prototype.resetGame = function () {
+        // Clear selected cells and reset the board
+        this.selectedCells.clear();
+        var cells = this.board.querySelectorAll(".grid-cell");
+        cells.forEach(function (cell) { return cell.classList.remove("selected"); });
     };
     return BingoGame;
 }());
