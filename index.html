@@ -7,31 +7,38 @@
   <style>
     #bingo-board {
       display: grid;
-      grid-template-columns: repeat(5, 50px);
-      grid-template-rows: repeat(5, 50px);
+      grid-template-columns: repeat(5, 60px);
       gap: 5px;
     }
     .grid-cell {
-      width: 50px;
-      height: 50px;
-      background-color: lightgray;
+      width: 60px;
+      height: 60px;
       display: flex;
       align-items: center;
       justify-content: center;
+      border: 1px solid #000;
+      font-size: 20px;
       cursor: pointer;
-      border: 1px solid #ccc;
     }
-    .grid-cell.selected {
-      background-color: lightblue;
+    .selected {
+      background-color: #90EE90;
+      pointer-events: none;
     }
-    .grid-cell.highlight {
-      border: 2px solid red;
+    #reset-button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <h1>Bingo Game</h1>
-  <div id="bingo-board"></div>
-  <script src="bingo.js"></script>
+
+<h1>Bingo Game</h1>
+<div id="bingo-board"></div>
+<button id="reset-button">Reset Game</button>
+
+<script src="bingo.js" type="module"></script>
+
 </body>
 </html>
