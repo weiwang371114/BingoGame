@@ -6,110 +6,99 @@ class BingoGame {
         this.maxSelections = 16;
         this.board = document.getElementById("bingo-board");
         this.resetButton = document.getElementById("reset-button");
+        this.modeSelect = document.getElementById("game-mode");
         this.selectedCells = new Set();
+        this.gameMode = "auto"; // Default mode
+        
         if (this.resetButton) {
             this.resetButton.addEventListener("click", () => this.resetGame());
         }
-        this.initBoard();
-    }
-    initBoard() {
-        if (this.board) {
-            for (let i = 0; i < 25; i++) {
-                const cell = document.createElement("div");
-                cell.classList.add("grid-cell");
-                cell.dataset.index = i.toString();
-                cell.addEventListener("click", () => this.selectCell(i));
-                this.board.appendChild(cell);
-            }
-        }
-    }
-    selectCell(index) {
-        if (this.selectedCells.has(index))
-            return;
-        // Mark the current cell
-        this.markCell(index);
-        // Select a random unselected cell after the current one
-        this.selectRandomCell();
-        // Show optimal move suggestion
-        this.showOptimalMove();
-        // Check if we have reached the maximum number of selections
-        if (this.selectedCells.size >= this.maxSelections) {
-            // Make sure the last pick and the random pick are visible before ending
-            setTimeout(() => this.endGame(), 300);
-        }
-    }
-    selectRandomCell() {
-        const unselectedCells = Array.from({ length: 25 }, (_, i) => i).filter((i) => !this.selectedCells.has(i));
-        if (unselectedCells.length === 0)
-            return;
-        const randomIndex = Math.floor(Math.random() * unselectedCells.length);
-        this.markCell(unselectedCells[randomIndex]);
-    }
-    markCell(index) {
-        this.selectedCells.add(index);
-        if (this.board) {
-            const cell = this.board.querySelector(`[data-index="${index}"]`);
-            if (cell)
-                cell.classList.add("selected");
-        }
-    }
-    endGame() {
-        const completedLines = this.countCompletedLines();
-        alert(`Game over! You completed ${completedLines} lines.`);
-    }
-    countCompletedLines() {
-        const rows = Array.from({ length: 5 }, () => Array(5).fill(false));
-        this.selectedCells.forEach((index) => {
-            const row = Math.floor(index / 5);
-            const col = index % 5;
-            rows[row][col] = true;
-        });
-        let completedLines = 0;
-        // Check rows and columns
-        for (let i = 0; i < 5; i++) {
-            if (rows[i].every((cell) => cell))
-                completedLines++; // row
-            if (rows.every((row) => row[i]))
-                completedLines++; // column
-        }
-        // Check diagonals
-        if (rows.every((_, i) => rows[i][i]))
-            completedLines++; // top-left to bottom-right
-        if (rows.every((_, i) => rows[i][4 - i]))
-            completedLines++; // top-right to bottom-left
-        return completedLines;
-    }
-    resetGame() {
-        // Clear selected cells and reset the board
-        this.selectedCells.clear(); // Clear the internal set
-        if (this.board) {
-            const cells = this.board.querySelectorAll(".grid-cell");
-            // Remove both "selected" and "suggested" classes from each grid cell
-            cells.forEach((cell) => {
-                cell.classList.remove("selected");
-                cell.classList.remove("suggested");
+        
+        if (this.modeSelect) {
+            this.modeSelect.addEventListener("change", (e) => {
+                this.gameMode = e.target.value;
+                this.resetGame();
             });
         }
+        
+        this.initializeBoard();
+        this.resetGame();
     }
-    
-    showOptimalMove() {
+
+    initializeBoard() {
+        if (!this.board) return;
+        
+        this.board.innerHTML = "";
+        for (let i = 0; i < 25; i++) {
+            const cell = document.createElement("div");
+            cell.className = "cell";
+            cell.textContent = i;
+            cell.addEventListener("click", () => this.handleCellClick(i));
+            this.board.appendChild(cell);
+        }
+    }
+
+    handleCellClick(index) {
+        if (this.selectedCells.has(index) || this.selectedCells.size >= this.maxSelections) {
+            return;
+        }
+
+        this.selectCell(index);
+        
+        if (this.gameMode === "auto") {
+            this.makeRandomMove();
+        }
+        
+        // Show best move suggestion in both modes
+        this.showBestMove();
+    }
+
+    selectCell(index) {
+        this.selectedCells.add(index);
+        const cell = this.board.children[index];
+        cell.classList.add("selected");
+    }
+
+    makeRandomMove() {
+        if (this.selectedCells.size >= this.maxSelections) return;
+        
+        const unselectedCells = Array.from({ length: 25 }, (_, i) => i)
+            .filter(i => !this.selectedCells.has(i));
+        
+        if (unselectedCells.length === 0) return;
+        
+        const randomIndex = Math.floor(Math.random() * unselectedCells.length);
+        const randomCell = unselectedCells[randomIndex];
+        
+        this.selectedCells.add(randomCell);
+        const cell = this.board.children[randomCell];
+        cell.classList.add("random-selected");
+    }
+
+    showBestMove() {
         // Clear previous suggestion
-        if (this.board) {
-            const previousSuggestion = this.board.querySelector('.suggested');
-            if (previousSuggestion) {
-                previousSuggestion.classList.remove('suggested');
-            }
+        const previousSuggestion = this.board.querySelector('.suggested');
+        if (previousSuggestion) {
+            previousSuggestion.classList.remove('suggested');
         }
         
         // Show new suggestion
         const solver = new BingoSolver(this.selectedCells);
         const optimalMove = solver.getOptimalMove();
-        if (this.board && optimalMove !== -1) {
-            const cell = this.board.querySelector(`[data-index="${optimalMove}"]`);
-            if (cell) {
-                cell.classList.add("suggested");
-            }
+        
+        if (optimalMove !== null) {
+            const cell = this.board.children[optimalMove];
+            cell.classList.add("suggested");
         }
     }
+
+    resetGame() {
+        this.selectedCells.clear();
+        this.initializeBoard();
+    }
 }
-new BingoGame();
+
+// Initialize the game when the DOM is loaded
+document.addEventListener("DOMContentLoaded", () => {
+    new BingoGame();
+});

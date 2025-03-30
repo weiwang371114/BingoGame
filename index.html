@@ -9,8 +9,17 @@
 <body>
 
 <h1>Bingo Game</h1>
+<div class="game-controls">
+  <div class="mode-selector">
+    <label>Game Mode:</label>
+    <select id="game-mode">
+      <option value="auto">Auto Mode</option>
+      <option value="manual">Manual Mode</option>
+    </select>
+  </div>
+  <button id="reset-button">Reset Game</button>
+</div>
 <div id="bingo-board"></div>
-<button id="reset-button">Reset Game</button>
 
 <script src="bingo.js" type="module"></script>
 
