@@ -26,6 +26,14 @@ IMMEDIATE_BONUSES = {
     'three_cell_line': 10,  # Bonus for creating a 3-cell line
 }
 
+# New scoring system parameters (after 12 cells)
+NEW_SCORING = {
+    'complete_line': 100,  # Points for completing a line
+    'four_cell_line': 25,  # Points for 4-cell line
+    'three_cell_line': 10,  # Points for 3-cell line
+    'threshold': 12,  # Number of cells after which new scoring takes effect
+}
+
 # Move evaluation weights
 MOVE_WEIGHTS = {
     'three_line': 1.0,  # Weight for 3-line potential

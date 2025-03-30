@@ -18,134 +18,225 @@ export class BingoSolver {
             12: [0, 6, 12, 18, 24],
             13: [4, 8, 12, 16, 20]
         };
-        this.allLines = this.generateAllLines();
+
+        // Pre-compute all possible lines and their sets for faster lookups
+        this.lineSets = Object.fromEntries(
+            Object.entries(this.lineDefinitions).map(([k, v]) => [k, new Set(v)])
+        );
+
+        // Pre-compute line combinations
+        this._threeLineCombinations = null;
+        this._fourLineCombinations = null;
+        this._fiveLineCombinations = null;
+
+        // Pre-compute power values for scoring
+        this._powerValues = new Map();
+        for (let i = 0; i <= 16; i++) {
+            this._powerValues.set(i, Math.pow(3, 16 - i));
+        }
     }
 
-    generateAllLines() {
-        const lines = [];
-        
-        // Generate 5-line solutions
-        for (const lineIndex in this.lineDefinitions) {
-            lines.push(this.lineDefinitions[lineIndex]);
-        }
-
-        // Generate 4-line solutions
-        for (const lineIndex in this.lineDefinitions) {
-            const fullLine = this.lineDefinitions[lineIndex];
-            for (let i = 0; i < fullLine.length; i++) {
-                const fourLine = fullLine.filter((_, index) => index !== i);
-                lines.push(fourLine);
-            }
-        }
-
-        // Generate 3-line solutions
-        for (const lineIndex in this.lineDefinitions) {
-            const fullLine = this.lineDefinitions[lineIndex];
-            for (let i = 0; i < fullLine.length - 1; i++) {
-                for (let j = i + 1; j < fullLine.length; j++) {
-                    const threeLine = fullLine.filter((_, index) => index !== i && index !== j);
-                    lines.push(threeLine);
-                }
-            }
-        }
-
-        return lines;
-    }
-
-    getThreeLinesTable() {
-        const allLines = Object.values(this.lineDefinitions);
-        const combinations = [];
-        
-        // Helper function to get unique grids needed for a combination of lines
-        function getUniqueGrids(lines) {
-            return new Set(lines.flat());
-        }
-        
-        // Helper function to check if a combination is valid (≤ 16 unique grids)
-        function isValidCombination(lines) {
-            const uniqueGrids = getUniqueGrids(lines);
-            return uniqueGrids.size <= 16;
-        }
-        
-        // Generate all possible combinations of 3 lines
-        for (let i = 0; i < allLines.length; i++) {
-            for (let j = i + 1; j < allLines.length; j++) {
-                for (let k = j + 1; k < allLines.length; k++) {
-                    const combination = [allLines[i], allLines[j], allLines[k]];
-                    if (isValidCombination(combination)) {
-                        combinations.push(combination);
-                    }
-                }
-            }
-        }
-        
-        return combinations;
-    }
-
-    getFourLinesTable() {
-        const allLines = Object.values(this.lineDefinitions);
-        const combinations = [];
-        
-        // Helper function to get unique grids needed for a combination of lines
-        function getUniqueGrids(lines) {
-            return new Set(lines.flat());
-        }
-        
-        // Helper function to check if a combination is valid (≤ 16 unique grids)
-        function isValidCombination(lines) {
-            const uniqueGrids = getUniqueGrids(lines);
-            return uniqueGrids.size <= 16;
-        }
-        
-        // Generate all possible combinations of 4 lines
-        for (let i = 0; i < allLines.length; i++) {
-            for (let j = i + 1; j < allLines.length; j++) {
-                for (let k = j + 1; k < allLines.length; k++) {
-                    for (let l = k + 1; l < allLines.length; l++) {
-                        const combination = [allLines[i], allLines[j], allLines[k], allLines[l]];
-                        if (isValidCombination(combination)) {
-                            combinations.push(combination);
+    get threeLineCombinations() {
+        if (!this._threeLineCombinations) {
+            const allLines = Object.values(this.lineDefinitions);
+            const combinations = [];
+            
+            // Pre-compute unique grids for each line
+            const lineGrids = allLines.map(line => new Set(line));
+            
+            for (let i = 0; i < allLines.length; i++) {
+                for (let j = i + 1; j < allLines.length; j++) {
+                    for (let k = j + 1; k < allLines.length; k++) {
+                        // Use set operations for faster union
+                        const uniqueGrids = new Set([...lineGrids[i], ...lineGrids[j], ...lineGrids[k]]);
+                        if (uniqueGrids.size <= 16) {
+                            combinations.push([allLines[i], allLines[j], allLines[k]]);
                         }
                     }
                 }
             }
+            
+            this._threeLineCombinations = combinations;
         }
-        
-        return combinations;
+        return this._threeLineCombinations;
     }
 
-    getFiveLinesTable() {
-        const allLines = Object.values(this.lineDefinitions);
-        const combinations = [];
-        
-        // Helper function to get unique grids needed for a combination of lines
-        function getUniqueGrids(lines) {
-            return new Set(lines.flat());
-        }
-        
-        // Helper function to check if a combination is valid (≤ 16 unique grids)
-        function isValidCombination(lines) {
-            const uniqueGrids = getUniqueGrids(lines);
-            return uniqueGrids.size <= 16;
-        }
-        
-        // Generate all possible combinations of 5 lines
-        for (let i = 0; i < allLines.length; i++) {
-            for (let j = i + 1; j < allLines.length; j++) {
-                for (let k = j + 1; k < allLines.length; k++) {
-                    for (let l = k + 1; l < allLines.length; l++) {
-                        for (let m = l + 1; m < allLines.length; m++) {
-                            const combination = [allLines[i], allLines[j], allLines[k], allLines[l], allLines[m]];
-                            if (isValidCombination(combination)) {
-                                combinations.push(combination);
+    get fourLineCombinations() {
+        if (!this._fourLineCombinations) {
+            const allLines = Object.values(this.lineDefinitions);
+            const combinations = [];
+            
+            // Pre-compute unique grids for each line
+            const lineGrids = allLines.map(line => new Set(line));
+            
+            for (let i = 0; i < allLines.length; i++) {
+                for (let j = i + 1; j < allLines.length; j++) {
+                    for (let k = j + 1; k < allLines.length; k++) {
+                        for (let l = k + 1; l < allLines.length; l++) {
+                            // Use set operations for faster union
+                            const uniqueGrids = new Set([...lineGrids[i], ...lineGrids[j], ...lineGrids[k], ...lineGrids[l]]);
+                            if (uniqueGrids.size <= 16) {
+                                combinations.push([allLines[i], allLines[j], allLines[k], allLines[l]]);
                             }
                         }
                     }
                 }
             }
+            
+            this._fourLineCombinations = combinations;
+        }
+        return this._fourLineCombinations;
+    }
+
+    get fiveLineCombinations() {
+        if (!this._fiveLineCombinations) {
+            const allLines = Object.values(this.lineDefinitions);
+            const combinations = [];
+            
+            // Pre-compute unique grids for each line
+            const lineGrids = allLines.map(line => new Set(line));
+            
+            for (let i = 0; i < allLines.length; i++) {
+                for (let j = i + 1; j < allLines.length; j++) {
+                    for (let k = j + 1; k < allLines.length; k++) {
+                        for (let l = k + 1; l < allLines.length; l++) {
+                            for (let m = l + 1; m < allLines.length; m++) {
+                                // Use set operations for faster union
+                                const uniqueGrids = new Set([...lineGrids[i], ...lineGrids[j], ...lineGrids[k], ...lineGrids[l], ...lineGrids[m]]);
+                                if (uniqueGrids.size <= 16) {
+                                    combinations.push([allLines[i], allLines[j], allLines[k], allLines[l], allLines[m]]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            this._fiveLineCombinations = combinations;
+        }
+        return this._fiveLineCombinations;
+    }
+
+    getPossibleMoves() {
+        return Array.from({length: 25}, (_, i) => i)
+            .filter(i => !this.boardState.has(i));
+    }
+
+    evaluateMove(move) {
+        const tempState = new Set(this.boardState);
+        tempState.add(move);
+        const selectedCells = tempState.size;
+
+        let threeLineScore = 0;
+        let fourLineScore = 0;
+        let fiveLineScore = 0;
+
+        // Check if we're past the threshold for the new scoring logic
+        const useNewScoring = selectedCells > 12;
+
+        if (useNewScoring) {
+            // New scoring system after threshold - optimized with sets
+            for (const lineSet of Object.values(this.lineSets)) {
+                if (lineSet.has(move)) {
+                    const selectedCount = [...lineSet].filter(grid => tempState.has(grid)).length;
+                    if (selectedCount === 5) {
+                        threeLineScore += 100;
+                    } else if (selectedCount === 4) {
+                        fourLineScore += 25;
+                    } else if (selectedCount === 3) {
+                        threeLineScore += 10;
+                    }
+                }
+            }
+        } else {
+            // Original scoring system for first threshold cells
+            // Check 3-line solutions
+            for (const combination of this.threeLineCombinations) {
+                const requiredGrids = new Set(combination.flat());
+                const notSelectedGrids = [...requiredGrids].filter(grid => !tempState.has(grid)).length;
+                
+                if (notSelectedGrids + selectedCells <= 16) {
+                    threeLineScore += this._powerValues.get(notSelectedGrids + selectedCells);
+                    
+                    for (const line of combination) {
+                        if (line.every(grid => tempState.has(grid))) {
+                            threeLineScore += 10;
+                        }
+                    }
+                }
+            }
+            
+            // Check 4-line solutions
+            for (const combination of this.fourLineCombinations) {
+                const requiredGrids = new Set(combination.flat());
+                const notSelectedGrids = [...requiredGrids].filter(grid => !tempState.has(grid)).length;
+                
+                if (notSelectedGrids + selectedCells <= 16) {
+                    fourLineScore += 25 + this._powerValues.get(notSelectedGrids + selectedCells);
+                }
+            }
+            
+            // Check 5-line solutions
+            for (const combination of this.fiveLineCombinations) {
+                const requiredGrids = new Set(combination.flat());
+                const notSelectedGrids = [...requiredGrids].filter(grid => !tempState.has(grid)).length;
+                
+                if (notSelectedGrids + selectedCells <= 16) {
+                    fiveLineScore += 100 + this._powerValues.get(notSelectedGrids + selectedCells);
+                }
+            }
+
+            // Add points for completed lines
+            let newLineCompleted = false;
+            for (const lineSet of Object.values(this.lineSets)) {
+                if (lineSet.has(move) && [...lineSet].every(grid => tempState.has(grid))) {
+                    threeLineScore += 100;
+                    newLineCompleted = true;
+                }
+            }
+
+            // If no new line completed, check for new 4-cell lines
+            if (!newLineCompleted) {
+                for (const lineSet of Object.values(this.lineSets)) {
+                    if (lineSet.has(move)) {
+                        const selectedCount = [...lineSet].filter(grid => tempState.has(grid)).length;
+                        if (selectedCount === 4) {
+                            fourLineScore += 25;
+                        } else if (selectedCount === 3) {
+                            threeLineScore += 10;
+                        }
+                    }
+                }
+            }
         }
         
-        return combinations;
+        return {
+            threeLine: threeLineScore,
+            fourLine: fourLineScore,
+            fiveLine: fiveLineScore,
+            total: threeLineScore + fourLineScore + fiveLineScore
+        };
+    }
+
+    countCompletedLines() {
+        return Object.values(this.lineSets)
+            .filter(lineSet => [...lineSet].every(cell => this.boardState.has(cell)))
+            .length;
+    }
+
+    getOptimalMove() {
+        const possibleMoves = this.getPossibleMoves();
+        let bestMove = -1;
+        let bestScore = -Infinity;
+        
+        for (const move of possibleMoves) {
+            const score = this.evaluateMove(move);
+            if (score.total > bestScore) {
+                bestScore = score.total;
+                bestMove = move;
+            }
+        }
+        return bestMove;
     }
 
     getLineType(line) {
@@ -174,134 +265,5 @@ export class BingoSolver {
             const lineTypes = combination.map(line => this.getLineType(line));
             const uniqueGrids = new Set(combination.flat());
         });
-    }
-
-    getOptimalMove() {
-        const possibleMoves = this.getPossibleMoves();
-        let bestMove = -1;
-        let bestScore = -Infinity;
-        
-        for (const move of possibleMoves) {
-            const score = this.evaluateMove(move);
-            if (score > bestScore) {
-                bestScore = score;
-                bestMove = move;
-            }
-        }
-        return bestMove;
-    }
-
-    getPossibleMoves() {
-        return Array.from({length: 25}, (_, i) => i)
-            .filter(i => !this.boardState.has(i));
-    }
-
-    evaluateMove(move) {
-        const tempState = new Set(this.boardState);
-        tempState.add(move);
-        const selectedCells = Array.from(tempState).length;
-
-        let threeLineScore = 0;
-        let fourLineScore = 0;
-        let fiveLineScore = 0;
-
-        // Check 3-line solutions
-        const threeLineCombinations = this.getThreeLinesTable();
-        for (const combination of threeLineCombinations) {
-            // Get all unique grids needed for this combination
-            const requiredGrids = new Set(combination.flat());
-            // Count how many grids are not selected
-            const notSelectedGrids = Array.from(requiredGrids).filter(grid => !tempState.has(grid)).length;
-            
-            // If this combination is possible (all required grids are selected or can be selected)
-            if (notSelectedGrids + selectedCells <= 16) {
-                // Base score for the combination
-                threeLineScore += Math.pow(3, 16 - (notSelectedGrids + selectedCells));
-                // Check if this move creates a new completed line
-                for (const line of combination) {
-                    const completedGrids = line.filter(grid => tempState.has(grid)).length;
-                    if (completedGrids === line.length) {
-                        threeLineScore += 10; // Add 10 points for creating a new completed lineer combination
-                    }
-                }
-            }
-        }
-        
-        // Check 4-line solutions
-        const fourLineCombinations = this.getFourLinesTable();
-        for (const combination of fourLineCombinations) {
-            // Get all unique grids needed for this combination
-            const requiredGrids = new Set(combination.flat());
-            // Count how many grids are already selected
-            const notSelectedGrids = Array.from(requiredGrids).filter(grid => !tempState.has(grid)).length;
-            
-            // If this combination is possible
-            if (notSelectedGrids + selectedCells <= 16) {
-                fourLineScore += 25 + Math.pow(3, 16 - (notSelectedGrids + selectedCells));
-            }
-        }
-        
-        // Check 5-line solutions
-        const fiveLineCombinations = this.getFiveLinesTable();
-        for (const combination of fiveLineCombinations) {
-            // Get all unique grids needed for this combination
-            const requiredGrids = new Set(combination.flat());
-            // Count how many grids are already selected
-            const notSelectedGrids = Array.from(requiredGrids).filter(grid => !tempState.has(grid)).length;
-            
-            // If this combination is possible
-            if (notSelectedGrids + selectedCells <= 16) {
-                fiveLineScore += 100 + Math.pow(3, 16 - (notSelectedGrids + selectedCells));
-            }
-        }
-
-        // Add points for completed lines
-        let newLineCompleted = false;
-        for (const line of Object.values(this.lineDefinitions)) {
-            const completedGrids = line.filter(grid => tempState.has(grid)).length;
-            if (completedGrids === line.length && line.includes(move)) {
-                threeLineScore += 100;
-                newLineCompleted = true;
-            }
-        }
-
-        // If no new line completed, check for new 4-cell lines
-        if (!newLineCompleted) {
-            for (const line of Object.values(this.lineDefinitions)) {
-                const selectedAfterMove = line.filter(grid => tempState.has(grid)).length;
-                // Add points if this move creates a new 4-cell line
-                if (line.includes(move)) {
-                    if (selectedAfterMove === 4) {
-                        fourLineScore += 25;
-                    }
-                    if (selectedAfterMove === 3) {
-                        threeLineScore += 10;
-                    }
-                }
-            }
-        }
-        
-        return {
-            threeLine: threeLineScore,
-            fourLine: fourLineScore,
-            fiveLine: fiveLineScore,
-            total: threeLineScore + fourLineScore + fiveLineScore
-        };
-    }
-
-    countCompletedLines() {
-        let completedLines = 0;
-        
-        // Check each line definition
-        for (const line of Object.values(this.lineDefinitions)) {
-            // Count how many cells in this line are selected
-            const selectedCount = line.filter(cell => this.boardState.has(cell)).length;
-            // If all cells in the line are selected, increment the counter
-            if (selectedCount === line.length) {
-                completedLines++;
-            }
-        }
-        
-        return completedLines;
     }
 }
