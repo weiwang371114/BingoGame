@@ -200,7 +200,9 @@ export class BingoSolver {
         const tempState = new Set(this.boardState);
         tempState.add(move);
         
-        let totalScore = 0;
+        let threeLineScore = 0;
+        let fourLineScore = 0;
+        let fiveLineScore = 0;
         const remainingMoves = 16 - tempState.size;
         
         // Check 3-line solutions
@@ -216,7 +218,16 @@ export class BingoSolver {
             // If we have enough remaining moves to complete this combination
             if (neededGrids <= remainingMoves) {
                 const availableMoves = remainingMoves - neededGrids;
-                totalScore += Math.pow(2, availableMoves);
+                threeLineScore += Math.pow(2, availableMoves);
+
+                // Check if this move creates a new completed line
+                for (const line of combination) {
+                    const completedGrids = line.filter(grid => tempState.has(grid)).length;
+                    if (completedGrids === line.length) {
+                        threeLineScore += 10; // Add 10 points for creating a new completed line
+                        break; // Only count once per combination
+                    }
+                }
             }
         }
         
@@ -233,7 +244,7 @@ export class BingoSolver {
             // If we have enough remaining moves to complete this combination
             if (neededGrids <= remainingMoves) {
                 const availableMoves = remainingMoves - neededGrids;
-                totalScore += 10 * Math.pow(2, availableMoves);
+                fourLineScore += 10 * Math.pow(2, availableMoves);
             }
         }
         
@@ -250,7 +261,7 @@ export class BingoSolver {
             // If we have enough remaining moves to complete this combination
             if (neededGrids <= remainingMoves) {
                 const availableMoves = remainingMoves - neededGrids;
-                totalScore += 25 * Math.pow(2, availableMoves);
+                fiveLineScore += 25 * Math.pow(2, availableMoves);
             }
         }
 
@@ -258,10 +269,15 @@ export class BingoSolver {
         for (const line of Object.values(this.lineDefinitions)) {
             const completedGrids = line.filter(grid => tempState.has(grid)).length;
             if (completedGrids === line.length) {
-                totalScore += 10;
+                threeLineScore += 10;
             }
         }
         
-        return totalScore;
+        return {
+            threeLine: threeLineScore,
+            fourLine: fourLineScore,
+            fiveLine: fiveLineScore,
+            total: threeLineScore + fourLineScore + fiveLineScore
+        };
     }
 }

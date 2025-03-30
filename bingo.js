@@ -32,7 +32,7 @@ class BingoGame {
         for (let i = 0; i < 25; i++) {
             const cell = document.createElement("div");
             cell.className = "cell";
-            cell.textContent = i;
+            cell.dataset.index = i; // Store the index as data attribute instead of text content
             cell.addEventListener("click", () => this.handleCellClick(i));
             this.board.appendChild(cell);
         }
@@ -49,8 +49,15 @@ class BingoGame {
             this.makeRandomMove();
         }
         
-        // Show best move suggestion in both modes
-        this.showBestMove();
+        // Show best move suggestion only if we haven't reached max selections
+        if (this.selectedCells.size < this.maxSelections) {
+            this.showBestMove();
+        }
+
+        // Check if game is over
+        if (this.selectedCells.size >= this.maxSelections) {
+            setTimeout(() => this.endGame(), 500); // Add a small delay to show the last move
+        }
     }
 
     selectCell(index) {
@@ -76,25 +83,43 @@ class BingoGame {
     }
 
     showBestMove() {
-        // Clear previous suggestion
-        const previousSuggestion = this.board.querySelector('.suggested');
-        if (previousSuggestion) {
-            previousSuggestion.classList.remove('suggested');
+        // Clear previous suggestions
+        const cells = this.board.getElementsByClassName("cell");
+        for (let cell of cells) {
+            cell.classList.remove('suggested');
+            cell.textContent = ''; // Clear any existing text
         }
         
-        // Show new suggestion
+        // Show evaluation points for all remaining cells
         const solver = new BingoSolver(this.selectedCells);
-        const optimalMove = solver.getOptimalMove();
+        const possibleMoves = solver.getPossibleMoves();
         
-        if (optimalMove !== null) {
-            const cell = this.board.children[optimalMove];
-            cell.classList.add("suggested");
-        }
+        // Find the highest total score
+        let maxScore = -1;
+        const scores = possibleMoves.map(move => {
+            const score = solver.evaluateMove(move);
+            maxScore = Math.max(maxScore, score.total);
+            return { move, score };
+        });
+        
+        // Display scores and highlight highest scoring cell
+        scores.forEach(({ move, score }) => {
+            const cell = this.board.children[move];
+            cell.innerHTML = `${score.threeLine}<br>${score.fourLine}<br>${score.fiveLine}`;
+            if (score.total === maxScore) {
+                cell.classList.add("suggested");
+            }
+        });
     }
 
     resetGame() {
         this.selectedCells.clear();
         this.initializeBoard();
+    }
+
+    endGame() {
+        // Implement end game logic
+        console.log("Game over!");
     }
 }
 
