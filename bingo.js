@@ -186,6 +186,7 @@ class BingoGame {
     }
 
     handleCellClick(index) {
+        // Only prevent selection if the cell is already selected or if we're at 16 cells
         if (this.selectedCells.has(index) || this.selectedCells.size >= this.maxSelections) {
             return;
         }
@@ -199,7 +200,7 @@ class BingoGame {
         }
         
         // Show best move suggestion only if we haven't reached max selections
-        if (this.selectedCells.size < this.maxSelections) {
+        if (this.selectedCells.size < this.maxSelections && !(this.gameMode === "auto" && this.selectedCells.size == 15)) {
             this.showBestMove();
         }
 
@@ -213,6 +214,7 @@ class BingoGame {
         this.selectedCells.add(index);
         const cell = this.board.children[index];
         cell.classList.add("selected");
+        cell.classList.remove("suggested");
     }
 
     makeRandomMove() {
@@ -287,7 +289,6 @@ class BingoGame {
 
     endGame() {
         // Implement end game logic
-        console.log("Game over!");
     }
 }
 

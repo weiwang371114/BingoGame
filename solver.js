@@ -262,7 +262,6 @@ export class BingoSolver {
             if (completedGrids === line.length && line.includes(move)) {
                 threeLineScore += 100;
                 newLineCompleted = true;
-                console.log("New 5-cell line completed:", line);
             }
         }
 
@@ -273,7 +272,6 @@ export class BingoSolver {
                 // Add points if this move creates a new 4-cell line
                 if (selectedAfterMove === 4 && line.includes(move)) {
                     threeLineScore += 25;
-                    console.log("New 4-cell line completed:", line, "current move:", move);
                 }
             }
         }
