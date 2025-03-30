@@ -1,24 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bingo Game</title>
+  <title>賓果遊戲</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<h1>Bingo Game</h1>
+<h1>賓果遊戲</h1>
 <div class="game-controls">
-  <div class="mode-selector">
-    <label>Game Mode:</label>
-    <select id="game-mode">
-      <option value="manual">Manual Mode</option>
-      <option value="auto">Auto Mode</option>
+  <div class="control-group">
+    <label for="language-select">語言:</label>
+    <select id="language-select">
+      <option value="zh">中文</option>
+      <option value="en">English</option>
     </select>
   </div>
-  <button id="reset-button">Reset Game</button>
-  <button id="move-back-button">Move Back</button>
+  <div class="control-group">
+    <label for="game-mode">遊戲模式:</label>
+    <select id="game-mode">
+      <option value="manual">手動模式</option>
+      <option value="auto">自動模式</option>
+    </select>
+  </div>
+  <button id="reset-button">重新開始</button>
+  <button id="move-back-button">返回</button>
 </div>
 <div id="bingo-board"></div>
 

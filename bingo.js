@@ -1,6 +1,27 @@
 console.log("Bingo script loaded");
 import { BingoSolver } from './solver.js';
 
+const translations = {
+    'zh': {
+        'Manual Mode': '手動模式',
+        'Auto Mode': '自動模式',
+        'Reset Game': '重新開始',
+        'Move Back': '返回',
+        'Game Mode': '遊戲模式',
+        'Game Over': '遊戲結束',
+        'Language': '語言'
+    },
+    'en': {
+        'Manual Mode': 'Manual Mode',
+        'Auto Mode': 'Auto Mode',
+        'Reset Game': 'Reset Game',
+        'Move Back': 'Move Back',
+        'Game Mode': 'Game Mode',
+        'Game Over': 'Game Over',
+        'Language': 'Language'
+    }
+};
+
 class BingoGame {
     constructor() {
         this.maxSelections = 16;
@@ -11,9 +32,16 @@ class BingoGame {
         this.resultMessage = document.getElementById("result-message");
         this.modalResetButton = document.getElementById("modal-reset-button");
         this.moveBackButton = document.getElementById("move-back-button");
+        this.languageSelect = document.getElementById("language-select");
         this.selectedCells = new Set();
         this.moveHistory = [];
         
+        // Load saved language or use default
+        this.currentLang = localStorage.getItem('bingoGameLang') || 'zh';
+        if (this.languageSelect) {
+            this.languageSelect.value = this.currentLang;
+        }
+
         // Load saved mode or use default
         this.gameMode = localStorage.getItem('bingoGameMode') || "auto";
         if (this.modeSelect) {
@@ -32,6 +60,14 @@ class BingoGame {
             });
         }
 
+        if (this.languageSelect) {
+            this.languageSelect.addEventListener("change", (e) => {
+                this.currentLang = e.target.value;
+                localStorage.setItem('bingoGameLang', this.currentLang);
+                this.updateTranslations();
+            });
+        }
+
         if (this.modalResetButton) {
             this.modalResetButton.addEventListener("click", () => {
                 this.modal.style.display = "none";
@@ -45,7 +81,36 @@ class BingoGame {
         }
         
         this.initializeBoard();
+        this.updateTranslations();
         this.resetGame();
+    }
+
+    updateTranslations() {
+        // Update mode select options
+        if (this.modeSelect) {
+            const options = this.modeSelect.options;
+            for (let i = 0; i < options.length; i++) {
+                const opt = options[i];
+                opt.textContent = translations[this.currentLang][opt.textContent];
+            }
+        }
+
+        // Update buttons
+        if (this.resetButton) {
+            this.resetButton.textContent = translations[this.currentLang]['Reset Game'];
+        }
+        if (this.moveBackButton) {
+            this.moveBackButton.textContent = translations[this.currentLang]['Move Back'];
+        }
+        if (this.modalResetButton) {
+            this.modalResetButton.textContent = translations[this.currentLang]['Reset Game'];
+        }
+
+        // Update labels
+        const modeLabel = document.querySelector('label[for="game-mode"]');
+        if (modeLabel) {
+            modeLabel.textContent = translations[this.currentLang]['Game Mode'] + ':';
+        }
     }
 
     initializeBoard() {
