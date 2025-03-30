@@ -132,6 +132,9 @@ class BingoGame {
             cell.addEventListener("click", () => this.handleCellClick(i));
             this.board.appendChild(cell);
         }
+        
+        // Show best move after board is initialized
+        this.showBestMove();
     }
 
     moveBack() {
@@ -253,6 +256,7 @@ class BingoGame {
             this.moveBackButton.disabled = true;
         }
         this.initializeBoard();
+        // No need to call showBestMove() here as it's already called in initializeBoard()
     }
 
     endGame() {
