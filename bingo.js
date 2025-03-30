@@ -10,7 +10,9 @@ class BingoGame {
         this.modal = document.getElementById("result-modal");
         this.resultMessage = document.getElementById("result-message");
         this.modalResetButton = document.getElementById("modal-reset-button");
+        this.moveBackButton = document.getElementById("move-back-button");
         this.selectedCells = new Set();
+        this.moveHistory = [];
         
         // Load saved mode or use default
         this.gameMode = localStorage.getItem('bingoGameMode') || "auto";
@@ -36,6 +38,11 @@ class BingoGame {
                 this.resetGame();
             });
         }
+
+        if (this.moveBackButton) {
+            this.moveBackButton.addEventListener("click", () => this.moveBack());
+            this.moveBackButton.disabled = true;
+        }
         
         this.initializeBoard();
         this.resetGame();
@@ -54,12 +61,45 @@ class BingoGame {
         }
     }
 
+    moveBack() {
+        if (this.moveHistory.length === 0) return;
+
+        // Remove the last two moves (player's move and computer's move in auto mode)
+        if (this.gameMode === "auto" && this.moveHistory.length >= 2) {
+            const lastMove = this.moveHistory.pop();
+            const secondLastMove = this.moveHistory.pop();
+            
+            this.selectedCells.delete(lastMove);
+            this.selectedCells.delete(secondLastMove);
+            
+            const lastCell = this.board.children[lastMove];
+            const secondLastCell = this.board.children[secondLastMove];
+            
+            lastCell.classList.remove("random-selected");
+            secondLastCell.classList.remove("selected");
+        } else {
+            // Remove just the last move in manual mode
+            const lastMove = this.moveHistory.pop();
+            this.selectedCells.delete(lastMove);
+            const lastCell = this.board.children[lastMove];
+            lastCell.classList.remove("selected");
+        }
+
+        // Update move back button state
+        this.moveBackButton.disabled = this.moveHistory.length === 0;
+
+        // Show best move for the new state
+        this.showBestMove();
+    }
+
     handleCellClick(index) {
         if (this.selectedCells.has(index) || this.selectedCells.size >= this.maxSelections) {
             return;
         }
 
         this.selectCell(index);
+        this.moveHistory.push(index);
+        this.moveBackButton.disabled = false;
         
         if (this.gameMode === "auto") {
             this.makeRandomMove();
@@ -72,7 +112,7 @@ class BingoGame {
 
         // Check if game is over
         if (this.selectedCells.size >= this.maxSelections) {
-            setTimeout(() => this.endGame(), 500); // Add a small delay to show the last move
+            setTimeout(() => this.endGame(), 500);
         }
     }
 
@@ -94,6 +134,7 @@ class BingoGame {
         const randomCell = unselectedCells[randomIndex];
         
         this.selectedCells.add(randomCell);
+        this.moveHistory.push(randomCell);
         const cell = this.board.children[randomCell];
         cell.classList.add("random-selected");
     }
@@ -148,6 +189,10 @@ class BingoGame {
 
     resetGame() {
         this.selectedCells.clear();
+        this.moveHistory = [];
+        if (this.moveBackButton) {
+            this.moveBackButton.disabled = true;
+        }
         this.initializeBoard();
     }
 
