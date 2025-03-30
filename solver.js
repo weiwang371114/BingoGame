@@ -237,7 +237,7 @@ export class BingoSolver {
             
             // If this combination is possible
             if (notSelectedGrids + selectedCells <= 16) {
-                fourLineScore += 25 + Math.pow(2, 16 - (notSelectedGrids + selectedCells));
+                fourLineScore += 20 + Math.pow(2, 16 - (notSelectedGrids + selectedCells));
             }
         }
         
@@ -251,7 +251,7 @@ export class BingoSolver {
             
             // If this combination is possible
             if (notSelectedGrids + selectedCells <= 16) {
-                fiveLineScore += 100 + Math.pow(2, 16 - (notSelectedGrids + selectedCells));
+                fiveLineScore += 50 + Math.pow(2, 16 - (notSelectedGrids + selectedCells));
             }
         }
 
