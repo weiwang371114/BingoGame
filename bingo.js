@@ -100,40 +100,50 @@ class BingoGame {
 
     showBestMove() {
         // Clear previous suggestions
-        const cells = this.board.getElementsByClassName("cell");
-        for (let cell of cells) {
-            cell.classList.remove('suggested', 'suggested-second');
-            cell.textContent = ''; // Clear any existing text
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => {
+            cell.classList.remove('suggested');
+            cell.classList.remove('suggested-second');
+        });
+
+        // If we've already selected 16 cells or game is over, don't show suggestions
+        if (this.selectedCells.size >= 16 || this.gameOver) {
+            return;
         }
-        
-        // Show evaluation points for all remaining cells
+
         const solver = new BingoSolver(this.selectedCells);
-        const possibleMoves = solver.getPossibleMoves();
-        
-        // Find the highest and second highest total scores
-        let maxScore = -1;
-        let secondMaxScore = -1;
-        const scores = possibleMoves.map(move => {
-            const score = solver.evaluateMove(move);
-            if (score.total > maxScore) {
-                secondMaxScore = maxScore;
-                maxScore = score.total;
-            } else if (score.total > secondMaxScore && score.total < maxScore) {
-                secondMaxScore = score.total;
+        let bestScore = -Infinity;
+        let secondBestScore = -Infinity;
+        let bestMove = -1;
+        let secondBestMove = -1;
+
+        // Evaluate all possible moves
+        for (let i = 0; i < 25; i++) {
+            if (!this.selectedCells.has(i)) {
+                const score = solver.evaluateMove(i).total;
+                if (score > bestScore) {
+                    secondBestScore = bestScore;
+                    secondBestMove = bestMove;
+                    bestScore = score;
+                    bestMove = i;
+                } else if (score > secondBestScore && score < bestScore) {
+                    secondBestScore = score;
+                    secondBestMove = i;
+                }
             }
-            return { move, score };
-        });
-        
-        // Display scores and highlight best and second-best moves
-        scores.forEach(({ move, score }) => {
-            const cell = this.board.children[move];
-            cell.innerHTML = `${score.threeLine}<br>${score.fourLine}<br>${score.fiveLine}`;
-            if (score.total === maxScore) {
-                cell.classList.add("suggested");
-            } else if (score.total === secondMaxScore) {
-                cell.classList.add("suggested-second");
-            }
-        });
+        }
+
+        // Show best move
+        if (bestMove !== -1) {
+            const bestCell = document.querySelector(`[data-index="${bestMove}"]`);
+            bestCell.classList.add('suggested');
+        }
+
+        // Show second best move if it has a different score
+        if (secondBestMove !== -1 && secondBestScore < bestScore) {
+            const secondBestCell = document.querySelector(`[data-index="${secondBestMove}"]`);
+            secondBestCell.classList.add('suggested-second');
+        }
     }
 
     resetGame() {
