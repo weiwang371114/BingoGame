@@ -7,8 +7,16 @@ class BingoGame {
         this.board = document.getElementById("bingo-board");
         this.resetButton = document.getElementById("reset-button");
         this.modeSelect = document.getElementById("game-mode");
+        this.modal = document.getElementById("result-modal");
+        this.resultMessage = document.getElementById("result-message");
+        this.modalResetButton = document.getElementById("modal-reset-button");
         this.selectedCells = new Set();
-        this.gameMode = "auto"; // Default mode
+        
+        // Load saved mode or use default
+        this.gameMode = localStorage.getItem('bingoGameMode') || "auto";
+        if (this.modeSelect) {
+            this.modeSelect.value = this.gameMode;
+        }
         
         if (this.resetButton) {
             this.resetButton.addEventListener("click", () => this.resetGame());
@@ -17,6 +25,14 @@ class BingoGame {
         if (this.modeSelect) {
             this.modeSelect.addEventListener("change", (e) => {
                 this.gameMode = e.target.value;
+                localStorage.setItem('bingoGameMode', this.gameMode);
+                this.resetGame();
+            });
+        }
+
+        if (this.modalResetButton) {
+            this.modalResetButton.addEventListener("click", () => {
+                this.modal.style.display = "none";
                 this.resetGame();
             });
         }
@@ -86,7 +102,7 @@ class BingoGame {
         // Clear previous suggestions
         const cells = this.board.getElementsByClassName("cell");
         for (let cell of cells) {
-            cell.classList.remove('suggested');
+            cell.classList.remove('suggested', 'suggested-second');
             cell.textContent = ''; // Clear any existing text
         }
         
@@ -94,20 +110,28 @@ class BingoGame {
         const solver = new BingoSolver(this.selectedCells);
         const possibleMoves = solver.getPossibleMoves();
         
-        // Find the highest total score
+        // Find the highest and second highest total scores
         let maxScore = -1;
+        let secondMaxScore = -1;
         const scores = possibleMoves.map(move => {
             const score = solver.evaluateMove(move);
-            maxScore = Math.max(maxScore, score.total);
+            if (score.total > maxScore) {
+                secondMaxScore = maxScore;
+                maxScore = score.total;
+            } else if (score.total > secondMaxScore && score.total < maxScore) {
+                secondMaxScore = score.total;
+            }
             return { move, score };
         });
         
-        // Display scores and highlight highest scoring cell
+        // Display scores and highlight best and second-best moves
         scores.forEach(({ move, score }) => {
             const cell = this.board.children[move];
             cell.innerHTML = `${score.threeLine}<br>${score.fourLine}<br>${score.fiveLine}`;
             if (score.total === maxScore) {
                 cell.classList.add("suggested");
+            } else if (score.total === secondMaxScore) {
+                cell.classList.add("suggested-second");
             }
         });
     }

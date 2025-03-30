@@ -59,10 +59,18 @@
 }
 
 .cell.suggested {
-    background-color: #FFC107;
+    background-color: #FFC107;  /* Bright yellow for best move */
     color: #000;
     font-weight: bold;
     animation: pulse 2s infinite;
+}
+
+.cell.suggested-second {
+    background-color: #FFE082;  /* Lighter yellow for second best move */
+    color: #000;
+    font-weight: bold;
+    animation: pulse 2s infinite;
+    animation-delay: 1s;
 }
 
 /* Reset button styles */
