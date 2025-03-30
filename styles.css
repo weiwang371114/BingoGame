@@ -1,0 +1,47 @@
+/* Board container */
+#bingo-board {
+    display: grid;
+    grid-template-columns: repeat(5, 60px);
+    gap: 5px;
+    margin: 20px 0;
+}
+
+/* Grid cell styles */
+.grid-cell {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #000;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* Reset button styles */
+#reset-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* Selected cell style */
+.selected {
+    background-color: #4CAF50;
+    color: white;
+}
+
+/* Suggested move style */
+.suggested {
+    background-color: #FFC107;
+    animation: pulse 2s infinite;
+}
+
+/* Pulse animation for suggested move */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}

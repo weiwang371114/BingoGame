@@ -1,4 +1,6 @@
 console.log("Bingo script loaded");
+import BingoSolver from './solver.js';
+
 class BingoGame {
     constructor() {
         this.maxSelections = 16;
@@ -28,6 +30,8 @@ class BingoGame {
         this.markCell(index);
         // Select a random unselected cell after the current one
         this.selectRandomCell();
+        // Show optimal move suggestion
+        this.showOptimalMove();
         // Check if we have reached the maximum number of selections
         if (this.selectedCells.size >= this.maxSelections) {
             // Make sure the last pick and the random pick are visible before ending
@@ -80,8 +84,31 @@ class BingoGame {
         this.selectedCells.clear(); // Clear the internal set
         if (this.board) {
             const cells = this.board.querySelectorAll(".grid-cell");
-            // Remove the "selected" class from each grid cell
-            cells.forEach((cell) => cell.classList.remove("selected"));
+            // Remove both "selected" and "suggested" classes from each grid cell
+            cells.forEach((cell) => {
+                cell.classList.remove("selected");
+                cell.classList.remove("suggested");
+            });
+        }
+    }
+    
+    showOptimalMove() {
+        // Clear previous suggestion
+        if (this.board) {
+            const previousSuggestion = this.board.querySelector('.suggested');
+            if (previousSuggestion) {
+                previousSuggestion.classList.remove('suggested');
+            }
+        }
+        
+        // Show new suggestion
+        const solver = new BingoSolver(this.selectedCells);
+        const optimalMove = solver.getOptimalMove();
+        if (this.board && optimalMove !== -1) {
+            const cell = this.board.querySelector(`[data-index="${optimalMove}"]`);
+            if (cell) {
+                cell.classList.add("suggested");
+            }
         }
     }
 }
