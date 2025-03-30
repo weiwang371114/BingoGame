@@ -38,7 +38,48 @@ export class BingoSolver {
             }
         }
 
+        // Generate 3-line solutions
+        for (const lineIndex in this.lineDefinitions) {
+            const fullLine = this.lineDefinitions[lineIndex];
+            for (let i = 0; i < fullLine.length - 1; i++) {
+                for (let j = i + 1; j < fullLine.length; j++) {
+                    const threeLine = fullLine.filter((_, index) => index !== i && index !== j);
+                    lines.push(threeLine);
+                }
+            }
+        }
+
         return lines;
+    }
+
+    getThreeLinesTable() {
+        const allLines = Object.values(this.lineDefinitions);
+        const combinations = [];
+        
+        // Helper function to get unique grids needed for a combination of lines
+        function getUniqueGrids(lines) {
+            return new Set(lines.flat());
+        }
+        
+        // Helper function to check if a combination is valid (≤ 16 unique grids)
+        function isValidCombination(lines) {
+            const uniqueGrids = getUniqueGrids(lines);
+            return uniqueGrids.size <= 16;
+        }
+        
+        // Generate all possible combinations of 3 lines
+        for (let i = 0; i < allLines.length; i++) {
+            for (let j = i + 1; j < allLines.length; j++) {
+                for (let k = j + 1; k < allLines.length; k++) {
+                    const combination = [allLines[i], allLines[j], allLines[k]];
+                    if (isValidCombination(combination)) {
+                        combinations.push(combination);
+                    }
+                }
+            }
+        }
+        
+        return combinations;
     }
 
     getFourLinesTable() {
@@ -161,6 +202,23 @@ export class BingoSolver {
         
         let totalScore = 0;
         const remainingMoves = 16 - tempState.size;
+        
+        // Check 3-line solutions
+        const threeLineCombinations = this.getThreeLinesTable();
+        for (const combination of threeLineCombinations) {
+            // Get all unique grids needed for this combination
+            const requiredGrids = new Set(combination.flat());
+            // Count how many grids are already selected
+            const selectedGrids = Array.from(requiredGrids).filter(grid => tempState.has(grid)).length;
+            // Calculate how many more grids are needed to complete this combination
+            const neededGrids = requiredGrids.size - selectedGrids;
+            
+            // If we have enough remaining moves to complete this combination
+            if (neededGrids <= remainingMoves) {
+                const availableMoves = remainingMoves - neededGrids;
+                totalScore += Math.pow(2, availableMoves);
+            }
+        }
         
         // Check 4-line solutions
         const fourLineCombinations = this.getFourLinesTable();
