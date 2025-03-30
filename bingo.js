@@ -9,16 +9,18 @@ const translations = {
         'Move Back': '上一步',
         'Game Mode': '遊戲模式',
         'Game Over': '遊戲結束',
-        'Language': '語言'
+        'Language': '語言',
+        'Show Scores': '分數檢查'
     },
     'en': {
         'Manual Mode': 'Manual Mode',
         'Auto Mode': 'Auto Mode',
         'Reset Game': 'Reset Game',
-        'Move Back': 'Move Back',
+        'Move Back': 'Undo',
         'Game Mode': 'Game Mode',
         'Game Over': 'Game Over',
-        'Language': 'Language'
+        'Language': 'Language',
+        'Show Scores': 'score check'
     }
 };
 
@@ -33,19 +35,29 @@ class BingoGame {
         this.modalResetButton = document.getElementById("modal-reset-button");
         this.moveBackButton = document.getElementById("move-back-button");
         this.languageSelect = document.getElementById("language-select");
+        this.showScoresCheckbox = document.getElementById("show-scores");
         this.selectedCells = new Set();
         this.moveHistory = [];
         
-        // Load saved language or use default
+        // Load saved preferences
         this.currentLang = localStorage.getItem('bingoGameLang') || 'zh';
+        this.gameMode = localStorage.getItem('bingoGameMode') || "auto";
+        this.showScores = localStorage.getItem('bingoShowScores') === 'true';
+        
+        // Initialize UI states
         if (this.languageSelect) {
             this.languageSelect.value = this.currentLang;
         }
-
-        // Load saved mode or use default
-        this.gameMode = localStorage.getItem('bingoGameMode') || "auto";
         if (this.modeSelect) {
             this.modeSelect.value = this.gameMode;
+        }
+        if (this.showScoresCheckbox) {
+            this.showScoresCheckbox.checked = this.showScores;
+            this.showScoresCheckbox.addEventListener("change", (e) => {
+                this.showScores = e.target.checked;
+                localStorage.setItem('bingoShowScores', this.showScores);
+                this.showBestMove(); // Refresh display
+            });
         }
         
         if (this.resetButton) {
@@ -118,6 +130,11 @@ class BingoGame {
         const langLabel = document.querySelector('label[for="language-select"]');
         if (langLabel) {
             langLabel.textContent = translations[this.currentLang]['Language'] + ':';
+        }
+
+        const scoresLabel = document.querySelector('label[for="show-scores"]');
+        if (scoresLabel) {
+            scoresLabel.textContent = translations[this.currentLang]['Show Scores'] + ':';
         }
     }
 
@@ -220,6 +237,7 @@ class BingoGame {
         const cells = document.querySelectorAll('.cell');
         cells.forEach(cell => {
             cell.classList.remove('suggested');
+            cell.textContent = '';  // Clear any previous score display
         });
 
         // If we've already selected 16 cells or game is over, don't show suggestions
@@ -234,10 +252,18 @@ class BingoGame {
         // Evaluate all possible moves
         for (let i = 0; i < 25; i++) {
             if (!this.selectedCells.has(i)) {
-                const score = solver.evaluateMove(i).total;
-                if (score > bestScore) {
-                    bestScore = score;
+                const score = solver.evaluateMove(i);
+                if (score.total > bestScore) {
+                    bestScore = score.total;
                     bestMove = i;
+                }
+                
+                // If showing scores is enabled, display them on each available cell
+                if (this.showScores) {
+                    const cell = document.querySelector(`[data-index="${i}"]`);
+                    if (cell) {
+                        cell.innerHTML = `3L:${score.threeLine}<br>4L:${score.fourLine}<br>5L:${score.fiveLine}`;
+                    }
                 }
             }
         }

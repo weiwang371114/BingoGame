@@ -256,10 +256,25 @@ export class BingoSolver {
         }
 
         // Add points for completed lines
+        let newLineCompleted = false;
         for (const line of Object.values(this.lineDefinitions)) {
             const completedGrids = line.filter(grid => tempState.has(grid)).length;
-            if (completedGrids === line.length) {
-                threeLineScore += 10;
+            if (completedGrids === line.length && line.includes(move)) {
+                threeLineScore += 100;
+                newLineCompleted = true;
+                console.log("New 5-cell line completed:", line);
+            }
+        }
+
+        // If no new line completed, check for new 4-cell lines
+        if (!newLineCompleted) {
+            for (const line of Object.values(this.lineDefinitions)) {
+                const selectedAfterMove = line.filter(grid => tempState.has(grid)).length;
+                // Add points if this move creates a new 4-cell line
+                if (selectedAfterMove === 4 && line.includes(move)) {
+                    threeLineScore += 25;
+                    console.log("New 4-cell line completed:", line, "current move:", move);
+                }
             }
         }
         
