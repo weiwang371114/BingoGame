@@ -46,7 +46,7 @@ class BingoGame {
         
         // Load saved preferences
         this.currentLang = localStorage.getItem('bingoGameLang') || 'zh';
-        this.gameMode = localStorage.getItem('bingoGameMode') || "auto";
+        this.gameMode = localStorage.getItem('bingoGameMode') || "manual";
         this.showScores = localStorage.getItem('bingoShowScores') === 'true';
         
         // Initialize UI states
