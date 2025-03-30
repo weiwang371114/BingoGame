@@ -10,7 +10,9 @@ const translations = {
         'Game Mode': '遊戲模式',
         'Game Over': '遊戲結束',
         'Language': '語言',
-        'Show Scores': '分數檢查'
+        'Show Scores': '分數檢查',
+        'Game End Info': '遊戲結束！完成 {lines} 條線',
+        'Game Title': '賓果遊戲'
     },
     'en': {
         'Manual Mode': 'Manual Mode',
@@ -20,7 +22,9 @@ const translations = {
         'Game Mode': 'Game Mode',
         'Game Over': 'Game Over',
         'Language': 'Language',
-        'Show Scores': 'score check'
+        'Show Scores': 'score check',
+        'Game End Info': 'Game Over! Completed {lines} lines',
+        'Game Title': 'Bingo Game'
     }
 };
 
@@ -36,6 +40,7 @@ class BingoGame {
         this.moveBackButton = document.getElementById("move-back-button");
         this.languageSelect = document.getElementById("language-select");
         this.showScoresCheckbox = document.getElementById("show-scores");
+        this.gameInfo = document.getElementById("game-info");
         this.selectedCells = new Set();
         this.moveHistory = [];
         
@@ -98,6 +103,12 @@ class BingoGame {
     }
 
     updateTranslations() {
+        // Update title
+        const title = document.querySelector('h1');
+        if (title) {
+            title.textContent = translations[this.currentLang]['Game Title'];
+        }
+
         // Update mode select options
         if (this.modeSelect) {
             const manualOption = this.modeSelect.querySelector('option[value="manual"]');
@@ -283,12 +294,31 @@ class BingoGame {
         if (this.moveBackButton) {
             this.moveBackButton.disabled = true;
         }
+        if (this.gameInfo) {
+            this.gameInfo.classList.remove('show');
+        }
         this.initializeBoard();
         // No need to call showBestMove() here as it's already called in initializeBoard()
     }
 
     endGame() {
-        // Implement end game logic
+        // Clear any suggestions
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => {
+            cell.classList.remove('suggested');
+            cell.textContent = '';  // Clear any score displays
+        });
+
+        // Count completed lines
+        const solver = new BingoSolver(this.selectedCells);
+        const completedLines = solver.countCompletedLines();
+        
+        // Show game info
+        if (this.gameInfo) {
+            const message = translations[this.currentLang]['Game End Info'].replace('{lines}', completedLines);
+            this.gameInfo.textContent = message;
+            this.gameInfo.classList.add('show');
+        }
     }
 }
 

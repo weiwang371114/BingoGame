@@ -283,4 +283,20 @@ export class BingoSolver {
             total: threeLineScore + fourLineScore + fiveLineScore
         };
     }
+
+    countCompletedLines() {
+        let completedLines = 0;
+        
+        // Check each line definition
+        for (const line of Object.values(this.lineDefinitions)) {
+            // Count how many cells in this line are selected
+            const selectedCount = line.filter(cell => this.boardState.has(cell)).length;
+            // If all cells in the line are selected, increment the counter
+            if (selectedCount === line.length) {
+                completedLines++;
+            }
+        }
+        
+        return completedLines;
+    }
 }
