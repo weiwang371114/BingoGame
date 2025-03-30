@@ -216,7 +216,7 @@ export class BingoSolver {
             // If this combination is possible (all required grids are selected or can be selected)
             if (notSelectedGrids + selectedCells <= 16) {
                 // Base score for the combination
-                threeLineScore += Math.pow(2, 16 - (notSelectedGrids + selectedCells));
+                threeLineScore += Math.pow(3, 16 - (notSelectedGrids + selectedCells));
                 // Check if this move creates a new completed line
                 for (const line of combination) {
                     const completedGrids = line.filter(grid => tempState.has(grid)).length;
@@ -237,7 +237,7 @@ export class BingoSolver {
             
             // If this combination is possible
             if (notSelectedGrids + selectedCells <= 16) {
-                fourLineScore += 20 + Math.pow(2, 16 - (notSelectedGrids + selectedCells));
+                fourLineScore += 25 + Math.pow(3, 16 - (notSelectedGrids + selectedCells));
             }
         }
         
@@ -251,7 +251,7 @@ export class BingoSolver {
             
             // If this combination is possible
             if (notSelectedGrids + selectedCells <= 16) {
-                fiveLineScore += 50 + Math.pow(2, 16 - (notSelectedGrids + selectedCells));
+                fiveLineScore += 100 + Math.pow(3, 16 - (notSelectedGrids + selectedCells));
             }
         }
 
@@ -270,8 +270,13 @@ export class BingoSolver {
             for (const line of Object.values(this.lineDefinitions)) {
                 const selectedAfterMove = line.filter(grid => tempState.has(grid)).length;
                 // Add points if this move creates a new 4-cell line
-                if (selectedAfterMove === 4 && line.includes(move)) {
-                    threeLineScore += 25;
+                if (line.includes(move)) {
+                    if (selectedAfterMove === 4) {
+                        fourLineScore += 25;
+                    }
+                    if (selectedAfterMove === 3) {
+                        threeLineScore += 10;
+                    }
                 }
             }
         }
