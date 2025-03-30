@@ -1,5 +1,5 @@
 console.log("Bingo script loaded");
-import BingoSolver from './solver.js';
+import { BingoSolver } from './solver.js';
 
 class BingoGame {
     constructor() {
