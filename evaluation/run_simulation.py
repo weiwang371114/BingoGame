@@ -66,7 +66,7 @@ def main():
     output_dir.mkdir(exist_ok=True)
     
     # Initialize and run simulation
-    simulator = BingoSimulator(num_games=200)  # Run 50 games
+    simulator = BingoSimulator(num_games=1000)  # Run 50 games
     simulator.run_simulation(num_workers=4)
     
     # Collect results

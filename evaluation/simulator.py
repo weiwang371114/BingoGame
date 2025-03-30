@@ -53,7 +53,7 @@ def run_game(_: int = 0) -> GameResult:
     )
 
 class BingoSimulator:
-    def __init__(self, num_games: int = 50):
+    def __init__(self, num_games: int = 10000):
         self.num_games = num_games
         self.results: List[GameResult] = []
         
