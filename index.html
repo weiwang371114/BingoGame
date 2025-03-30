@@ -12,15 +12,15 @@
 <div class="game-controls">
   <div class="control-group">
     <label for="language-select">語言:</label>
-    <select id="language-select">
-      <option value="zh">中文</option>
-      <option value="en">English</option>
-    </select>
+    <div class="language-buttons">
+      <button id="lang-zh" class="lang-btn">中文</button>
+      <button id="lang-en" class="lang-btn">English</button>
+    </div>
   </div>
   <div class="control-group">
     <label for="game-mode">遊戲模式:</label>
     <select id="game-mode">
-      <option value="manual">手動模式</option>
+      <option value="manual" selected>手動模式</option>
       <option value="auto">自動模式</option>
     </select>
   </div>

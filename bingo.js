@@ -38,7 +38,8 @@ class BingoGame {
         this.resultMessage = document.getElementById("result-message");
         this.modalResetButton = document.getElementById("modal-reset-button");
         this.moveBackButton = document.getElementById("move-back-button");
-        this.languageSelect = document.getElementById("language-select");
+        this.langZhButton = document.getElementById("lang-zh");
+        this.langEnButton = document.getElementById("lang-en");
         this.showScoresCheckbox = document.getElementById("show-scores");
         this.gameInfo = document.getElementById("game-info");
         this.selectedCells = new Set();
@@ -50,8 +51,10 @@ class BingoGame {
         this.showScores = localStorage.getItem('bingoShowScores') === 'true';
         
         // Initialize UI states
-        if (this.languageSelect) {
-            this.languageSelect.value = this.currentLang;
+        if (this.langZhButton && this.langEnButton) {
+            this.updateLanguageButtons();
+            this.langZhButton.addEventListener("click", () => this.setLanguage('zh'));
+            this.langEnButton.addEventListener("click", () => this.setLanguage('en'));
         }
         if (this.modeSelect) {
             this.modeSelect.value = this.gameMode;
@@ -74,14 +77,6 @@ class BingoGame {
                 this.gameMode = e.target.value;
                 localStorage.setItem('bingoGameMode', this.gameMode);
                 this.resetGame();
-            });
-        }
-
-        if (this.languageSelect) {
-            this.languageSelect.addEventListener("change", (e) => {
-                this.currentLang = e.target.value;
-                localStorage.setItem('bingoGameLang', this.currentLang);
-                this.updateTranslations();
             });
         }
 
@@ -319,6 +314,20 @@ class BingoGame {
             this.gameInfo.textContent = message;
             this.gameInfo.classList.add('show');
         }
+    }
+
+    updateLanguageButtons() {
+        if (this.langZhButton && this.langEnButton) {
+            this.langZhButton.classList.toggle('active', this.currentLang === 'zh');
+            this.langEnButton.classList.toggle('active', this.currentLang === 'en');
+        }
+    }
+
+    setLanguage(lang) {
+        this.currentLang = lang;
+        localStorage.setItem('bingoGameLang', this.currentLang);
+        this.updateLanguageButtons();
+        this.updateTranslations();
     }
 }
 
