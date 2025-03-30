@@ -59,18 +59,9 @@
 }
 
 .cell.suggested {
-    background-color: #FFC107;  /* Bright yellow for best move */
-    color: #000;
-    font-weight: bold;
+    background-color: #FFC107;
+    color: black;
     animation: pulse 2s infinite;
-}
-
-.cell.suggested-second {
-    background-color: #FFE082;  /* Lighter yellow for second best move */
-    color: #000;
-    font-weight: bold;
-    animation: pulse 2s infinite;
-    animation-delay: 1s;
 }
 
 /* Reset button styles */
@@ -119,7 +110,16 @@
 
 /* Pulse animation for suggested move */
 @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(0.95);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }

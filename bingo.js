@@ -144,7 +144,6 @@ class BingoGame {
         const cells = document.querySelectorAll('.cell');
         cells.forEach(cell => {
             cell.classList.remove('suggested');
-            cell.classList.remove('suggested-second');
         });
 
         // If we've already selected 16 cells or game is over, don't show suggestions
@@ -154,22 +153,15 @@ class BingoGame {
 
         const solver = new BingoSolver(this.selectedCells);
         let bestScore = -Infinity;
-        let secondBestScore = -Infinity;
         let bestMove = -1;
-        let secondBestMove = -1;
 
         // Evaluate all possible moves
         for (let i = 0; i < 25; i++) {
             if (!this.selectedCells.has(i)) {
                 const score = solver.evaluateMove(i).total;
                 if (score > bestScore) {
-                    secondBestScore = bestScore;
-                    secondBestMove = bestMove;
                     bestScore = score;
                     bestMove = i;
-                } else if (score > secondBestScore && score < bestScore) {
-                    secondBestScore = score;
-                    secondBestMove = i;
                 }
             }
         }
@@ -178,12 +170,6 @@ class BingoGame {
         if (bestMove !== -1) {
             const bestCell = document.querySelector(`[data-index="${bestMove}"]`);
             bestCell.classList.add('suggested');
-        }
-
-        // Show second best move if it has a different score
-        if (secondBestMove !== -1 && secondBestScore < bestScore) {
-            const secondBestCell = document.querySelector(`[data-index="${secondBestMove}"]`);
-            secondBestCell.classList.add('suggested-second');
         }
     }
 
