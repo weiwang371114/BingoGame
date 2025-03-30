@@ -6,7 +6,7 @@ const translations = {
         'Manual Mode': '手動模式',
         'Auto Mode': '自動模式',
         'Reset Game': '重新開始',
-        'Move Back': '返回',
+        'Move Back': '上一步',
         'Game Mode': '遊戲模式',
         'Game Over': '遊戲結束',
         'Language': '語言'
@@ -88,10 +88,13 @@ class BingoGame {
     updateTranslations() {
         // Update mode select options
         if (this.modeSelect) {
-            const options = this.modeSelect.options;
-            for (let i = 0; i < options.length; i++) {
-                const opt = options[i];
-                opt.textContent = translations[this.currentLang][opt.textContent];
+            const manualOption = this.modeSelect.querySelector('option[value="manual"]');
+            const autoOption = this.modeSelect.querySelector('option[value="auto"]');
+            if (manualOption) {
+                manualOption.textContent = translations[this.currentLang]['Manual Mode'];
+            }
+            if (autoOption) {
+                autoOption.textContent = translations[this.currentLang]['Auto Mode'];
             }
         }
 
@@ -110,6 +113,11 @@ class BingoGame {
         const modeLabel = document.querySelector('label[for="game-mode"]');
         if (modeLabel) {
             modeLabel.textContent = translations[this.currentLang]['Game Mode'] + ':';
+        }
+        
+        const langLabel = document.querySelector('label[for="language-select"]');
+        if (langLabel) {
+            langLabel.textContent = translations[this.currentLang]['Language'] + ':';
         }
     }
 
