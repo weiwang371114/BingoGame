@@ -203,7 +203,6 @@ export class BingoSolver {
         let threeLineScore = 0;
         let fourLineScore = 0;
         let fiveLineScore = 0;
-        const remainingMoves = 16 - tempState.size;
         
         // Check 3-line solutions
         const threeLineCombinations = this.getThreeLinesTable();
@@ -212,13 +211,11 @@ export class BingoSolver {
             const requiredGrids = new Set(combination.flat());
             // Count how many grids are already selected
             const selectedGrids = Array.from(requiredGrids).filter(grid => tempState.has(grid)).length;
-            // Calculate how many more grids are needed to complete this combination
-            const neededGrids = requiredGrids.size - selectedGrids;
             
-            // If we have enough remaining moves to complete this combination
-            if (neededGrids <= remainingMoves) {
-                const availableMoves = remainingMoves - neededGrids;
-                threeLineScore += Math.pow(2, availableMoves);
+            // If this combination is possible (all required grids are selected or can be selected)
+            if (selectedGrids > 0) {
+                // Base score for the combination
+                threeLineScore += Math.pow(2, selectedGrids);
 
                 // Check if this move creates a new completed line
                 for (const line of combination) {
@@ -238,13 +235,10 @@ export class BingoSolver {
             const requiredGrids = new Set(combination.flat());
             // Count how many grids are already selected
             const selectedGrids = Array.from(requiredGrids).filter(grid => tempState.has(grid)).length;
-            // Calculate how many more grids are needed to complete this combination
-            const neededGrids = requiredGrids.size - selectedGrids;
             
-            // If we have enough remaining moves to complete this combination
-            if (neededGrids <= remainingMoves) {
-                const availableMoves = remainingMoves - neededGrids;
-                fourLineScore += 10 * Math.pow(2, availableMoves);
+            // If this combination is possible
+            if (selectedGrids > 0) {
+                fourLineScore += 10 * Math.pow(2, selectedGrids);
             }
         }
         
@@ -255,13 +249,10 @@ export class BingoSolver {
             const requiredGrids = new Set(combination.flat());
             // Count how many grids are already selected
             const selectedGrids = Array.from(requiredGrids).filter(grid => tempState.has(grid)).length;
-            // Calculate how many more grids are needed to complete this combination
-            const neededGrids = requiredGrids.size - selectedGrids;
             
-            // If we have enough remaining moves to complete this combination
-            if (neededGrids <= remainingMoves) {
-                const availableMoves = remainingMoves - neededGrids;
-                fiveLineScore += 25 * Math.pow(2, availableMoves);
+            // If this combination is possible
+            if (selectedGrids > 0) {
+                fiveLineScore += 25 * Math.pow(2, selectedGrids);
             }
         }
 
