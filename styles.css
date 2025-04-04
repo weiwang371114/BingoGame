@@ -256,3 +256,54 @@ input[type="checkbox"] {
 .lang-btn.active:hover {
     background-color: #3182ce;
 }
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 24px;
+    border-radius: 12px;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.3s ease-in-out;
+}
+
+#result-message {
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: #2d3748;
+    font-weight: 500;
+}
+
+#modal-reset-button {
+    background-color: #48bb78;
+    margin-top: 16px;
+}
+
+#modal-reset-button:hover {
+    background-color: #38a169;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}

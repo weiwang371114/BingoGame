@@ -308,11 +308,11 @@ class BingoGame {
         const solver = new BingoSolver(this.selectedCells);
         const completedLines = solver.countCompletedLines();
         
-        // Show game info
-        if (this.gameInfo) {
+        // Show result in modal
+        if (this.modal && this.resultMessage) {
             const message = translations[this.currentLang]['Game End Info'].replace('{lines}', completedLines);
-            this.gameInfo.textContent = message;
-            this.gameInfo.classList.add('show');
+            this.resultMessage.textContent = message;
+            this.modal.style.display = 'block';
         }
     }
 
