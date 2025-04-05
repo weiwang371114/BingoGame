@@ -23,6 +23,15 @@ function evaluateBoard() {
         const evaluation = solver.evaluateMove(move);
         evaluations[move] = evaluation;
     }
+
+    // Check for pattern match
+    const optimalMove = solver.getOptimalMove();
+    if (optimalMove.pattern) {
+        evaluations[optimalMove.move] = {
+            ...optimalMove.score,
+            pattern: optimalMove.pattern
+        };
+    }
     
     // Output results as JSON
     console.log(JSON.stringify(evaluations));

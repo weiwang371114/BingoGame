@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from tqdm import tqdm
 from solver import BingoSolver
 import random
+from collections import Counter
 
 @dataclass
 class GameResult:
@@ -11,6 +12,7 @@ class GameResult:
     moves: List[int]
     final_board: set
     scores: List[Dict[str, float]]
+    pattern_matches: List[Dict]  # New field to track pattern matches
 
 def run_game(_: int = 0) -> GameResult:
     """Function to run a single game for multiprocessing
@@ -21,10 +23,17 @@ def run_game(_: int = 0) -> GameResult:
     board_state = set()
     moves = []
     scores = []
+    pattern_matches = []  # Track pattern matches during the game
     
     while len(board_state) < 16:
         # Player's move using the solver
         solver = BingoSolver(board_state)
+        
+        # Check for pattern match before getting move
+        pattern_match = solver._check_patterns()
+        if pattern_match:
+            pattern_matches.append(pattern_match)
+        
         move, score = solver.get_optimal_move()
         
         board_state.add(move)
@@ -49,7 +58,8 @@ def run_game(_: int = 0) -> GameResult:
         completed_lines=completed_lines,
         moves=moves,
         final_board=board_state,
-        scores=scores
+        scores=scores,
+        pattern_matches=pattern_matches
     )
 
 class BingoSimulator:
@@ -110,4 +120,32 @@ class BingoSimulator:
             'mean_four_line': float(np.mean([s['four_line'] for s in all_scores])),
             'mean_five_line': float(np.mean([s['five_line'] for s in all_scores])),
             'mean_total': float(np.mean([s['total'] for s in all_scores]))
+        }
+    
+    def analyze_pattern_recognition(self) -> Dict:
+        """Analyze pattern recognition statistics across all games."""
+        total_matches = 0
+        pattern_descriptions = []
+        
+        # Collect pattern matches from all games
+        for result in self.results:
+            total_matches += len(result.pattern_matches)
+            pattern_descriptions.extend(match['description'] for match in result.pattern_matches)
+        
+        # Calculate pattern match rate
+        total_moves = sum(len(result.moves) // 2 for result in self.results)  # Only count player moves
+        match_rate = (total_matches / total_moves) * 100 if total_moves > 0 else 0
+        
+        # Find most common pattern
+        pattern_counter = Counter(pattern_descriptions)
+        most_common = pattern_counter.most_common(1)[0] if pattern_descriptions else ("None", 0)
+        
+        return {
+            'total_matches': total_matches,
+            'match_rate': match_rate,
+            'most_common_pattern': {
+                'description': most_common[0],
+                'count': most_common[1]
+            },
+            'pattern_counts': dict(pattern_counter)
         } 

@@ -70,6 +70,8 @@ def generate_test_cases() -> List[Set[int]]:
     # Late game states (9-11 moves)
     test_cases.append({0, 1, 2, 3, 4, 5, 6, 7, 8})  # Almost complete line
     test_cases.append({0, 4, 8, 12, 16, 20, 21, 22, 23, 24})  # Complex pattern
+
+    test_cases.append({0, 1, 2, 3, 4, 8, 12, 16, 17, 20})  # Almost complete line.
     
     return test_cases
 

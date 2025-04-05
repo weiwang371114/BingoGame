@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Set, List, Dict, Tuple
+from typing import Set, List, Dict, Tuple, Optional
 from scoring_config import LINE_SCORES, IMMEDIATE_BONUSES, MOVE_WEIGHTS, GAME_CONSTRAINTS, NEW_SCORING
 
 class BingoSolver:
@@ -37,6 +37,19 @@ class BingoSolver:
             i: LINE_SCORES['three_line']['power_base'] ** (LINE_SCORES['three_line']['power_exponent'] - i)
             for i in range(GAME_CONSTRAINTS['max_cells'] + 1)
         }
+
+        # Pre-compute transformations for pattern matching
+        self._transformations = self._generate_transformations()
+        
+        # Known optimal patterns
+        self.patterns = [
+            {
+                'cells': {0, 1, 2, 3, 4, 8, 12, 16, 17, 20},
+                'optimal_move': 18,
+                'description': "Row completion with diagonal potential",
+                'move_count': 10  # Number of cells already selected
+            }
+        ]
 
     def _generate_all_lines(self) -> List[List[int]]:
         lines = []
@@ -213,7 +226,70 @@ class BingoSolver:
         return sum(1 for line_set in self.line_sets.values() 
                   if all(cell in self.board_state for cell in line_set))
 
+    def _generate_transformations(self) -> List[callable]:
+        """Generate all possible board transformations (rotations and flips)."""
+        transformations = []
+        
+        # Identity transformation
+        transformations.append(lambda x: x)
+        
+        # Rotations (90, 180, 270 degrees)
+        transformations.append(lambda i: (i % 5) * 5 + (4 - i // 5))  # 90 degrees clockwise
+        transformations.append(lambda i: 24 - i)  # 180 degrees
+        transformations.append(lambda i: (4 - i % 5) * 5 + i // 5)  # 270 degrees clockwise
+        
+        # Flips (horizontal and vertical)
+        transformations.append(lambda i: (i // 5) * 5 + (4 - i % 5))  # Horizontal flip
+        transformations.append(lambda i: (4 - i // 5) * 5 + (i % 5))  # Vertical flip
+        
+        # Diagonal flips
+        transformations.append(lambda i: (i % 5) * 5 + i // 5)  # Main diagonal flip
+        transformations.append(lambda i: (4 - i % 5) * 5 + (4 - i // 5))  # Other diagonal flip
+        
+        return transformations
+
+    def _match_pattern(self, pattern: Dict) -> Optional[int]:
+        """Check if current board state matches a pattern after any transformation."""
+        # First check if the move count matches
+        if len(self.board_state) != pattern['move_count']:
+            return None
+
+        current_cells = sorted(list(self.board_state))
+        
+        # Try all transformations
+        for transform in self._transformations:
+            # Transform the pattern
+            transformed_pattern = sorted([transform(cell) for cell in pattern['cells']])
+            
+            # Check if transformed pattern matches current board state
+            if transformed_pattern == current_cells:
+                # If match found, transform the optimal move
+                return transform(pattern['optimal_move'])
+        
+        return None
+
+    def _check_patterns(self) -> Optional[Dict]:
+        """Check if current board state matches any known patterns."""
+        for pattern in self.patterns:
+            matched_move = self._match_pattern(pattern)
+            if matched_move is not None:
+                return {
+                    'move': matched_move,
+                    'description': pattern['description']
+                }
+        return None
+
     def get_optimal_move(self) -> Tuple[int, Dict[str, float]]:
+        """Get the optimal move for the current board state."""
+        # First check for known patterns
+        pattern_match = self._check_patterns()
+        if pattern_match:
+            # Evaluate the pattern-matched move to get its score
+            move = pattern_match['move']
+            score = self.evaluate_move(move)
+            return move, score
+
+        # Fall back to regular evaluation if no pattern matches
         possible_moves = self.get_possible_moves()
         best_move = -1
         best_score = None

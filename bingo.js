@@ -254,20 +254,14 @@ class BingoGame {
         }
 
         const solver = new BingoSolver(this.selectedCells);
-        let bestScore = -Infinity;
-        let bestMove = -1;
-
-        // Evaluate all possible moves
-        for (let i = 0; i < 25; i++) {
-            if (!this.selectedCells.has(i)) {
-                const score = solver.evaluateMove(i);
-                if (score.total > bestScore) {
-                    bestScore = score.total;
-                    bestMove = i;
-                }
-                
-                // If showing scores is enabled, display them on each available cell
-                if (this.showScores) {
+        const result = solver.getOptimalMove();
+        const bestMove = result.move;
+        
+        // If showing scores is enabled, display them on each available cell
+        if (this.showScores) {
+            for (let i = 0; i < 25; i++) {
+                if (!this.selectedCells.has(i)) {
+                    const score = solver.evaluateMove(i);
                     const cell = document.querySelector(`[data-index="${i}"]`);
                     if (cell) {
                         cell.innerHTML = `3L:${score.threeLine}<br>4L:${score.fourLine}<br>5L:${score.fiveLine}`;
@@ -280,6 +274,11 @@ class BingoGame {
         if (bestMove !== -1) {
             const bestCell = document.querySelector(`[data-index="${bestMove}"]`);
             bestCell.classList.add('suggested');
+            
+            // If it's a pattern match, add a tooltip
+            if (result.pattern) {
+                bestCell.title = `Pattern: ${result.pattern}`;
+            }
         }
     }
 

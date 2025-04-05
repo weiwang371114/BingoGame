@@ -39,6 +39,19 @@ export class BingoSolver {
                 LINE_SCORES.three_line.power_exponent - i
             ));
         }
+
+        // Pre-compute transformations for pattern matching
+        this._transformations = this._generateTransformations();
+        
+        // Known optimal patterns
+        this.patterns = [
+            {
+                cells: [0, 1, 2, 3, 4, 8, 12, 16, 17, 20],
+                optimalMove: 18,
+                description: "Row completion with diagonal potential",
+                moveCount: 10  // Number of cells already selected
+            }
+        ];
     }
 
     get threeLineCombinations() {
@@ -135,24 +148,57 @@ export class BingoSolver {
         tempState.add(move);
         const selectedCells = tempState.size;
 
-        let threeLineScore = 0;
-        let fourLineScore = 0;
-        let fiveLineScore = 0;
+        let scoreDetails = {
+            threeLine: {
+                base: 0,
+                power: 0,
+                immediate: 0,
+                combinations: []
+            },
+            fourLine: {
+                base: 0,
+                power: 0,
+                immediate: 0,
+                combinations: []
+            },
+            fiveLine: {
+                base: 0,
+                power: 0,
+                immediate: 0,
+                combinations: []
+            },
+            useNewScoring: selectedCells > NEW_SCORING.threshold
+        };
 
         // Check if we're past the threshold for the new scoring logic
         const useNewScoring = selectedCells > NEW_SCORING.threshold;
 
         if (useNewScoring) {
             // New scoring system after threshold - optimized with sets
-            for (const lineSet of Object.values(this.lineSets)) {
+            for (const [lineId, lineSet] of Object.entries(this.lineSets)) {
                 if (lineSet.has(move)) {
                     const selectedCount = [...lineSet].filter(grid => tempState.has(grid)).length;
                     if (selectedCount === 5) {
-                        threeLineScore += NEW_SCORING.complete_line;
+                        scoreDetails.threeLine.immediate += NEW_SCORING.complete_line;
+                        scoreDetails.threeLine.combinations.push({
+                            line: [...lineSet],
+                            type: 'complete',
+                            score: NEW_SCORING.complete_line
+                        });
                     } else if (selectedCount === 4) {
-                        fourLineScore += NEW_SCORING.four_cell_line;
+                        scoreDetails.fourLine.immediate += NEW_SCORING.four_cell_line;
+                        scoreDetails.fourLine.combinations.push({
+                            line: [...lineSet],
+                            type: 'four-cell',
+                            score: NEW_SCORING.four_cell_line
+                        });
                     } else if (selectedCount === 3) {
-                        threeLineScore += NEW_SCORING.three_cell_line;
+                        scoreDetails.threeLine.immediate += NEW_SCORING.three_cell_line;
+                        scoreDetails.threeLine.combinations.push({
+                            line: [...lineSet],
+                            type: 'three-cell',
+                            score: NEW_SCORING.three_cell_line
+                        });
                     }
                 }
             }
@@ -164,15 +210,26 @@ export class BingoSolver {
                 const notSelectedGrids = [...requiredGrids].filter(grid => !tempState.has(grid)).length;
                 
                 if (notSelectedGrids + selectedCells <= GAME_CONSTRAINTS.max_cells) {
-                    const score = LINE_SCORES.three_line.base + 
-                                this._powerValues.get(notSelectedGrids + selectedCells);
-                    threeLineScore += score;
+                    const powerScore = this._powerValues.get(notSelectedGrids + selectedCells);
+                    scoreDetails.threeLine.base += LINE_SCORES.three_line.base;
+                    scoreDetails.threeLine.power += powerScore;
+                    
+                    let combinationDetails = {
+                        lines: combination,
+                        remainingMoves: notSelectedGrids,
+                        powerScore: powerScore,
+                        baseScore: LINE_SCORES.three_line.base,
+                        immediateBonus: 0
+                    };
                     
                     for (const line of combination) {
                         if (line.every(grid => tempState.has(grid))) {
-                            threeLineScore += IMMEDIATE_BONUSES.complete_line;
+                            scoreDetails.threeLine.immediate += IMMEDIATE_BONUSES.complete_line;
+                            combinationDetails.immediateBonus += IMMEDIATE_BONUSES.complete_line;
                         }
                     }
+                    
+                    scoreDetails.threeLine.combinations.push(combinationDetails);
                 }
             }
             
@@ -182,9 +239,16 @@ export class BingoSolver {
                 const notSelectedGrids = [...requiredGrids].filter(grid => !tempState.has(grid)).length;
                 
                 if (notSelectedGrids + selectedCells <= GAME_CONSTRAINTS.max_cells) {
-                    const score = LINE_SCORES.four_line.base + 
-                                this._powerValues.get(notSelectedGrids + selectedCells);
-                    fourLineScore += score;
+                    const powerScore = this._powerValues.get(notSelectedGrids + selectedCells);
+                    scoreDetails.fourLine.base += LINE_SCORES.four_line.base;
+                    scoreDetails.fourLine.power += powerScore;
+                    
+                    scoreDetails.fourLine.combinations.push({
+                        lines: combination,
+                        remainingMoves: notSelectedGrids,
+                        powerScore: powerScore,
+                        baseScore: LINE_SCORES.four_line.base
+                    });
                 }
             }
             
@@ -194,46 +258,31 @@ export class BingoSolver {
                 const notSelectedGrids = [...requiredGrids].filter(grid => !tempState.has(grid)).length;
                 
                 if (notSelectedGrids + selectedCells <= GAME_CONSTRAINTS.max_cells) {
-                    const score = LINE_SCORES.five_line.base + 
-                                this._powerValues.get(notSelectedGrids + selectedCells);
-                    fiveLineScore += score;
-                }
-            }
-
-            // Add points for completed lines
-            let newLineCompleted = false;
-            for (const lineSet of Object.values(this.lineSets)) {
-                if (lineSet.has(move) && [...lineSet].every(grid => tempState.has(grid))) {
-                    threeLineScore += IMMEDIATE_BONUSES.complete_line;
-                    newLineCompleted = true;
-                }
-            }
-
-            // If no new line completed, check for new 4-cell lines
-            if (!newLineCompleted) {
-                for (const lineSet of Object.values(this.lineSets)) {
-                    if (lineSet.has(move)) {
-                        const selectedCount = [...lineSet].filter(grid => tempState.has(grid)).length;
-                        if (selectedCount === 4) {
-                            fourLineScore += IMMEDIATE_BONUSES.four_cell_line;
-                        } else if (selectedCount === 3) {
-                            threeLineScore += IMMEDIATE_BONUSES.three_cell_line;
-                        }
-                    }
+                    const powerScore = this._powerValues.get(notSelectedGrids + selectedCells);
+                    scoreDetails.fiveLine.base += LINE_SCORES.five_line.base;
+                    scoreDetails.fiveLine.power += powerScore;
+                    
+                    scoreDetails.fiveLine.combinations.push({
+                        lines: combination,
+                        remainingMoves: notSelectedGrids,
+                        powerScore: powerScore,
+                        baseScore: LINE_SCORES.five_line.base
+                    });
                 }
             }
         }
 
-        // Apply weights to scores
-        threeLineScore *= MOVE_WEIGHTS.three_line;
-        fourLineScore *= MOVE_WEIGHTS.four_line;
-        fiveLineScore *= MOVE_WEIGHTS.five_line;
-        
+        // Calculate total scores with weights
+        const totalThreeLine = (scoreDetails.threeLine.base + scoreDetails.threeLine.power + scoreDetails.threeLine.immediate) * MOVE_WEIGHTS.three_line;
+        const totalFourLine = (scoreDetails.fourLine.base + scoreDetails.fourLine.power + scoreDetails.fourLine.immediate) * MOVE_WEIGHTS.four_line;
+        const totalFiveLine = (scoreDetails.fiveLine.base + scoreDetails.fiveLine.power + scoreDetails.fiveLine.immediate) * MOVE_WEIGHTS.five_line;
+
         return {
-            threeLine: threeLineScore,
-            fourLine: fourLineScore,
-            fiveLine: fiveLineScore,
-            total: threeLineScore + fourLineScore + fiveLineScore
+            threeLine: Math.round(totalThreeLine),
+            fourLine: Math.round(totalFourLine),
+            fiveLine: Math.round(totalFiveLine),
+            total: Math.round(totalThreeLine + totalFourLine + totalFiveLine),
+            details: scoreDetails
         };
     }
 
@@ -243,19 +292,123 @@ export class BingoSolver {
             .length;
     }
 
+    _generateTransformations() {
+        const transformations = [];
+        
+        // Identity transformation
+        transformations.push(i => i);
+        
+        // Rotations (90, 180, 270 degrees)
+        transformations.push(i => {
+            const row = Math.floor(i / 5);
+            const col = i % 5;
+            return col * 5 + (4 - row); // 90 degrees clockwise
+        });
+        transformations.push(i => {
+            const row = Math.floor(i / 5);
+            const col = i % 5;
+            return (4 - row) * 5 + (4 - col); // 180 degrees
+        });
+        transformations.push(i => {
+            const row = Math.floor(i / 5);
+            const col = i % 5;
+            return (4 - col) * 5 + row; // 270 degrees clockwise
+        });
+        
+        // Flips (horizontal and vertical)
+        transformations.push(i => {
+            const row = Math.floor(i / 5);
+            const col = i % 5;
+            return row * 5 + (4 - col); // Horizontal flip
+        });
+        transformations.push(i => {
+            const row = Math.floor(i / 5);
+            const col = i % 5;
+            return (4 - row) * 5 + col; // Vertical flip
+        });
+        
+        // Diagonal flips
+        transformations.push(i => {
+            const row = Math.floor(i / 5);
+            const col = i % 5;
+            return col * 5 + row; // Main diagonal flip
+        });
+        transformations.push(i => {
+            const row = Math.floor(i / 5);
+            const col = i % 5;
+            return (4 - col) * 5 + (4 - row); // Other diagonal flip
+        });
+        
+        return transformations;
+    }
+
+    _matchPattern(pattern) {
+        // First check if the move count matches
+        if (this.boardState.size !== pattern.moveCount) return null;
+
+        const currentCells = [...this.boardState].sort((a, b) => a - b);
+        
+        // Try all transformations
+        for (const transform of this._transformations) {
+            // Transform the pattern
+            const transformedPattern = pattern.cells.map(transform).sort((a, b) => a - b);
+            
+            // Check if transformed pattern matches current board state
+            if (JSON.stringify(transformedPattern) === JSON.stringify(currentCells)) {
+                // If match found, transform the optimal move
+                return transform(pattern.optimalMove);
+            }
+        }
+        
+        return null;
+    }
+
+    _checkPatterns() {
+        for (const pattern of this.patterns) {
+            const matchedMove = this._matchPattern(pattern);
+            if (matchedMove !== null) {
+                return {
+                    move: matchedMove,
+                    description: pattern.description
+                };
+            }
+        }
+        return null;
+    }
+
     getOptimalMove() {
+        // First check for known patterns
+        const patternMatch = this._checkPatterns();
+        if (patternMatch) {
+            // Evaluate the pattern-matched move to get its score
+            const score = this.evaluateMove(patternMatch.move);
+            return {
+                move: patternMatch.move,
+                score: score,
+                pattern: patternMatch.description
+            };
+        }
+
+        // Fall back to regular evaluation if no pattern matches
         const possibleMoves = this.getPossibleMoves();
         let bestMove = -1;
-        let bestScore = -Infinity;
+        let bestScore = null;
+        let bestScoreTotal = -Infinity;
         
         for (const move of possibleMoves) {
             const score = this.evaluateMove(move);
-            if (score.total > bestScore) {
-                bestScore = score.total;
+            if (score.total > bestScoreTotal) {
+                bestScoreTotal = score.total;
+                bestScore = score;
                 bestMove = move;
             }
         }
-        return bestMove;
+        
+        return {
+            move: bestMove,
+            score: bestScore,
+            pattern: null
+        };
     }
 
     getLineType(line) {
