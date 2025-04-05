@@ -2,10 +2,12 @@
   "name": "bingo-game",
   "version": "1.0.0",
   "description": "Bingo game with optimal move solver",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "serve": "http-server -c-1"
+    "serve": "http-server -c-1",
+    "test": "node test_solver_sync.js"
   },
   "author": "",
   "license": "ISC",

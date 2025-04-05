@@ -19,28 +19,37 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# Virtual Environment
-venv/
-env/
-ENV/
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 .env
+.env.test
+.env.production
 
-# IDE
+# IDE/Editor
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
 .DS_Store
 
-# Project specific
-evaluation/results/
-*.json
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.bmp
+# Testing
+.coverage
+htmlcov/
+.tox/
+.nox/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
 
 # Logs
 *.log
@@ -53,20 +62,31 @@ log/
 .env.test.local
 .env.production.local
 
-# Coverage reports
-htmlcov/
-.tox/
-.coverage
-.coverage.*
-.cache
-coverage.xml
-*.cover
+# Build outputs
+/build
+/dist
+/out
 
-# Node.js
-node_modules/
-npm-debug.log
-yarn-debug.log
-yarn-error.log
+# Temporary files
+*.tmp
+*.temp
+.*.swp
+.*.swo
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.env
+
+# Project specific
+evaluation/results/
+*.json
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
 
 # OS
 Thumbs.db
