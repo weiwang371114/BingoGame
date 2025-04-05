@@ -6,12 +6,16 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "serve": "http-server -c-1",
-    "test": "node test_solver_sync.js"
+    "dev": "nodemon server.js",
+    "test": "python test_solver_sync.py && node test_optimal_moves.js",
+    "simulate": "python run_simulation.py"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "http-server": "^14.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
   }
 }
