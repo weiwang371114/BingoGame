@@ -1,3 +1,5 @@
+import { LINE_SCORES, IMMEDIATE_BONUSES, NEW_SCORING, MOVE_WEIGHTS, GAME_CONSTRAINTS } from './scoring_config.js';
+
 export class BingoSolver {
     constructor(boardState) {
         this.boardState = boardState;
@@ -31,8 +33,11 @@ export class BingoSolver {
 
         // Pre-compute power values for scoring
         this._powerValues = new Map();
-        for (let i = 0; i <= 16; i++) {
-            this._powerValues.set(i, Math.pow(3, 16 - i));
+        for (let i = 0; i <= GAME_CONSTRAINTS.max_cells; i++) {
+            this._powerValues.set(i, Math.pow(
+                LINE_SCORES.three_line.power_base,
+                LINE_SCORES.three_line.power_exponent - i
+            ));
         }
     }
 
@@ -49,7 +54,7 @@ export class BingoSolver {
                     for (let k = j + 1; k < allLines.length; k++) {
                         // Use set operations for faster union
                         const uniqueGrids = new Set([...lineGrids[i], ...lineGrids[j], ...lineGrids[k]]);
-                        if (uniqueGrids.size <= 16) {
+                        if (uniqueGrids.size <= GAME_CONSTRAINTS.max_cells) {
                             combinations.push([allLines[i], allLines[j], allLines[k]]);
                         }
                     }
@@ -75,7 +80,7 @@ export class BingoSolver {
                         for (let l = k + 1; l < allLines.length; l++) {
                             // Use set operations for faster union
                             const uniqueGrids = new Set([...lineGrids[i], ...lineGrids[j], ...lineGrids[k], ...lineGrids[l]]);
-                            if (uniqueGrids.size <= 16) {
+                            if (uniqueGrids.size <= GAME_CONSTRAINTS.max_cells) {
                                 combinations.push([allLines[i], allLines[j], allLines[k], allLines[l]]);
                             }
                         }
@@ -102,8 +107,11 @@ export class BingoSolver {
                         for (let l = k + 1; l < allLines.length; l++) {
                             for (let m = l + 1; m < allLines.length; m++) {
                                 // Use set operations for faster union
-                                const uniqueGrids = new Set([...lineGrids[i], ...lineGrids[j], ...lineGrids[k], ...lineGrids[l], ...lineGrids[m]]);
-                                if (uniqueGrids.size <= 16) {
+                                const uniqueGrids = new Set([
+                                    ...lineGrids[i], ...lineGrids[j], ...lineGrids[k],
+                                    ...lineGrids[l], ...lineGrids[m]
+                                ]);
+                                if (uniqueGrids.size <= GAME_CONSTRAINTS.max_cells) {
                                     combinations.push([allLines[i], allLines[j], allLines[k], allLines[l], allLines[m]]);
                                 }
                             }
@@ -118,7 +126,7 @@ export class BingoSolver {
     }
 
     getPossibleMoves() {
-        return Array.from({length: 25}, (_, i) => i)
+        return Array.from({length: GAME_CONSTRAINTS.board_size}, (_, i) => i)
             .filter(i => !this.boardState.has(i));
     }
 
@@ -132,7 +140,7 @@ export class BingoSolver {
         let fiveLineScore = 0;
 
         // Check if we're past the threshold for the new scoring logic
-        const useNewScoring = selectedCells > 12;
+        const useNewScoring = selectedCells > NEW_SCORING.threshold;
 
         if (useNewScoring) {
             // New scoring system after threshold - optimized with sets
@@ -140,11 +148,11 @@ export class BingoSolver {
                 if (lineSet.has(move)) {
                     const selectedCount = [...lineSet].filter(grid => tempState.has(grid)).length;
                     if (selectedCount === 5) {
-                        threeLineScore += 100;
+                        threeLineScore += NEW_SCORING.complete_line;
                     } else if (selectedCount === 4) {
-                        fourLineScore += 25;
+                        fourLineScore += NEW_SCORING.four_cell_line;
                     } else if (selectedCount === 3) {
-                        threeLineScore += 10;
+                        threeLineScore += NEW_SCORING.three_cell_line;
                     }
                 }
             }
@@ -155,12 +163,14 @@ export class BingoSolver {
                 const requiredGrids = new Set(combination.flat());
                 const notSelectedGrids = [...requiredGrids].filter(grid => !tempState.has(grid)).length;
                 
-                if (notSelectedGrids + selectedCells <= 16) {
-                    threeLineScore += this._powerValues.get(notSelectedGrids + selectedCells);
+                if (notSelectedGrids + selectedCells <= GAME_CONSTRAINTS.max_cells) {
+                    const score = LINE_SCORES.three_line.base + 
+                                this._powerValues.get(notSelectedGrids + selectedCells);
+                    threeLineScore += score;
                     
                     for (const line of combination) {
                         if (line.every(grid => tempState.has(grid))) {
-                            threeLineScore += 10;
+                            threeLineScore += IMMEDIATE_BONUSES.complete_line;
                         }
                     }
                 }
@@ -171,8 +181,10 @@ export class BingoSolver {
                 const requiredGrids = new Set(combination.flat());
                 const notSelectedGrids = [...requiredGrids].filter(grid => !tempState.has(grid)).length;
                 
-                if (notSelectedGrids + selectedCells <= 16) {
-                    fourLineScore += 25 + this._powerValues.get(notSelectedGrids + selectedCells);
+                if (notSelectedGrids + selectedCells <= GAME_CONSTRAINTS.max_cells) {
+                    const score = LINE_SCORES.four_line.base + 
+                                this._powerValues.get(notSelectedGrids + selectedCells);
+                    fourLineScore += score;
                 }
             }
             
@@ -181,8 +193,10 @@ export class BingoSolver {
                 const requiredGrids = new Set(combination.flat());
                 const notSelectedGrids = [...requiredGrids].filter(grid => !tempState.has(grid)).length;
                 
-                if (notSelectedGrids + selectedCells <= 16) {
-                    fiveLineScore += 100 + this._powerValues.get(notSelectedGrids + selectedCells);
+                if (notSelectedGrids + selectedCells <= GAME_CONSTRAINTS.max_cells) {
+                    const score = LINE_SCORES.five_line.base + 
+                                this._powerValues.get(notSelectedGrids + selectedCells);
+                    fiveLineScore += score;
                 }
             }
 
@@ -190,7 +204,7 @@ export class BingoSolver {
             let newLineCompleted = false;
             for (const lineSet of Object.values(this.lineSets)) {
                 if (lineSet.has(move) && [...lineSet].every(grid => tempState.has(grid))) {
-                    threeLineScore += 100;
+                    threeLineScore += IMMEDIATE_BONUSES.complete_line;
                     newLineCompleted = true;
                 }
             }
@@ -201,14 +215,19 @@ export class BingoSolver {
                     if (lineSet.has(move)) {
                         const selectedCount = [...lineSet].filter(grid => tempState.has(grid)).length;
                         if (selectedCount === 4) {
-                            fourLineScore += 25;
+                            fourLineScore += IMMEDIATE_BONUSES.four_cell_line;
                         } else if (selectedCount === 3) {
-                            threeLineScore += 10;
+                            threeLineScore += IMMEDIATE_BONUSES.three_cell_line;
                         }
                     }
                 }
             }
         }
+
+        // Apply weights to scores
+        threeLineScore *= MOVE_WEIGHTS.three_line;
+        fourLineScore *= MOVE_WEIGHTS.four_line;
+        fiveLineScore *= MOVE_WEIGHTS.five_line;
         
         return {
             threeLine: threeLineScore,
