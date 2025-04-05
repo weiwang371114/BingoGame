@@ -4,8 +4,12 @@
   "description": "Bingo game with optimal move solver",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "serve": "http-server -c-1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "http-server": "^14.1.1"
+  }
 }
